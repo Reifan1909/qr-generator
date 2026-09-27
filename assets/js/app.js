@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selectColorType) selectColorType.value = isSolid ? 'solid' : 'gradient';
       if (pickerColor1) pickerColor1.value = c1;
       if (pickerColor2) pickerColor2.value = c2;
-      
+
       updateColors();
       window.showToast(`Warna "${swatch.title}" dipilih`, 'info');
     });
