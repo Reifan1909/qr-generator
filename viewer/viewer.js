@@ -65,12 +65,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (projectId) {
       await window.qrStorage.ready();
       project = await window.qrStorage.getProject(projectId);
-      if (project && project.data) {
-        itemData = project.data;
+      if (project) {
+        itemData = project.data || project;
         // Record Scan Analytics with rich client metadata!
-        const clientInfo = detectClientInfo();
-        const updated = await window.qrStorage.incrementScanCount(projectId, clientInfo);
-        if (updated) project = updated;
+        try {
+          const clientInfo = detectClientInfo();
+          const updated = await window.qrStorage.incrementScanCount(projectId, clientInfo);
+          if (updated) project = updated;
+        } catch (scanErr) {
+          console.warn('Scan logging warning:', scanErr);
+        }
       }
     }
 

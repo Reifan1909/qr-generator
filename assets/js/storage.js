@@ -107,12 +107,28 @@ class QRStorage {
     // 2. If Firestore is active, sync to Cloud Firestore
     if (this.firestore) {
       try {
+        const publicRef = this.firestore.collection('public_projects').doc(record.id);
+
+        // Check if public_projects already has higher scanCount so we don't accidentally overwrite scans
+        try {
+          const pubSnap = await publicRef.get();
+          if (pubSnap.exists) {
+            const pubData = pubSnap.data();
+            if (pubData.scanCount && pubData.scanCount > record.scanCount) {
+              record.scanCount = pubData.scanCount;
+              record.lastScannedAt = pubData.lastScannedAt || record.lastScannedAt;
+              if (pubData.deviceStats) record.deviceStats = pubData.deviceStats;
+              if (pubData.scanLogs && pubData.scanLogs.length) record.scanLogs = pubData.scanLogs;
+            }
+          }
+        } catch (e) {}
+
         if (this.currentUser) {
           const userRef = this.firestore.collection('users').doc(this.currentUser.uid);
           await userRef.collection('projects').doc(record.id).set(record, { merge: true });
         }
+
         // Save public projection so any smartphone scanner can read payload and log scans
-        const publicRef = this.firestore.collection('public_projects').doc(record.id);
         await publicRef.set({
           id: record.id,
           userId: this.currentUser.uid,
@@ -165,15 +181,60 @@ class QRStorage {
           const cloudProjects = [];
           snapshot.forEach((doc) => cloudProjects.push(doc.data()));
 
-          // Merge cloud into local DB silently
-          for (const cp of cloudProjects) {
+          // CRITICAL FIX: Merge scanCount, lastScannedAt, deviceStats, and scanLogs from public_projects!
+          await Promise.all(cloudProjects.map(async (cp) => {
+            try {
+              const pubDoc = await this.firestore.collection('public_projects').doc(cp.id).get();
+              if (pubDoc.exists) {
+                const pubData = pubDoc.data();
+                if (pubData.scanCount !== undefined && pubData.scanCount > (cp.scanCount || 0)) {
+                  cp.scanCount = pubData.scanCount;
+                  cp.lastScannedAt = pubData.lastScannedAt || cp.lastScannedAt;
+                  if (pubData.deviceStats) cp.deviceStats = pubData.deviceStats;
+                  if (pubData.scanLogs && pubData.scanLogs.length) {
+                    cp.scanLogs = pubData.scanLogs;
+                  }
+                  // Keep user's private copy in sync asynchronously
+                  userRef.collection('projects').doc(cp.id).set({
+                    scanCount: cp.scanCount,
+                    lastScannedAt: cp.lastScannedAt,
+                    deviceStats: cp.deviceStats || {},
+                    scanLogs: cp.scanLogs || []
+                  }, { merge: true }).catch(() => {});
+                }
+              }
+            } catch (err) {
+              console.warn('Sync public project err:', err);
+            }
             await this.saveLocalOnly(cp);
-          }
+          }));
+
           return cloudProjects;
         }
       } catch (err) {
         console.warn('Pull from Firestore warning:', err);
       }
+    }
+
+    // Also for localProjects (e.g. demo mode or fallback), sync with public_projects if firestore is online
+    if (this.firestore && localProjects.length > 0) {
+      await Promise.all(localProjects.map(async (lp) => {
+        try {
+          const pubDoc = await this.firestore.collection('public_projects').doc(lp.id).get();
+          if (pubDoc.exists) {
+            const pubData = pubDoc.data();
+            if (pubData.scanCount !== undefined && pubData.scanCount > (lp.scanCount || 0)) {
+              lp.scanCount = pubData.scanCount;
+              lp.lastScannedAt = pubData.lastScannedAt || lp.lastScannedAt;
+              if (pubData.deviceStats) lp.deviceStats = pubData.deviceStats;
+              if (pubData.scanLogs && pubData.scanLogs.length) {
+                lp.scanLogs = pubData.scanLogs;
+              }
+              await this.saveLocalOnly(lp);
+            }
+          }
+        } catch (e) {}
+      }));
     }
 
     localProjects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
@@ -196,11 +257,33 @@ class QRStorage {
   async getProject(id) {
     await this.ready();
 
+    let project = null;
+
     // Check Cloud first if online & configured
     if (this.firestore) {
       try {
+        if (this.currentUser) {
+          const userDoc = await this.firestore.collection('users').doc(this.currentUser.uid).collection('projects').doc(id).get();
+          if (userDoc.exists) {
+            project = userDoc.data();
+          }
+        }
         const publicDoc = await this.firestore.collection('public_projects').doc(id).get();
-        if (publicDoc.exists) return publicDoc.data();
+        if (publicDoc.exists) {
+          const pubData = publicDoc.data();
+          if (project) {
+            project.scanCount = pubData.scanCount !== undefined ? pubData.scanCount : project.scanCount;
+            project.lastScannedAt = pubData.lastScannedAt || project.lastScannedAt;
+            project.deviceStats = pubData.deviceStats || project.deviceStats;
+            if (pubData.scanLogs && pubData.scanLogs.length) project.scanLogs = pubData.scanLogs;
+          } else {
+            project = pubData;
+          }
+        }
+        if (project) {
+          await this.saveLocalOnly(project);
+          return project;
+        }
       } catch (e) {
         // Fallback to local
       }
@@ -299,7 +382,8 @@ class QRStorage {
           const updatePayload = {
             scanCount: firebase.firestore.FieldValue.increment(1),
             lastScannedAt: now,
-            [`deviceStats.${devKey}`]: firebase.firestore.FieldValue.increment(1)
+            [`deviceStats.${devKey}`]: firebase.firestore.FieldValue.increment(1),
+            scanLogs: firebase.firestore.FieldValue.arrayUnion(logEntry)
           };
           await publicDocRef.set(updatePayload, { merge: true });
 
@@ -308,7 +392,7 @@ class QRStorage {
             await userDocRef.set(updatePayload, { merge: true });
           }
         } catch (e) {
-          // Non-critical background sync
+          console.warn('Sync scan to firestore warning:', e);
         }
       }
     } catch (err) {

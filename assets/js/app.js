@@ -55,6 +55,39 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTheme(currentThemePref);
 
   // -------------------------------------------------------------
+  // Mobile Hamburger Menu Controller
+  // -------------------------------------------------------------
+  const btnHamburger = document.getElementById('btn-hamburger');
+  const headerActions = document.getElementById('header-actions');
+
+  if (btnHamburger && headerActions) {
+    btnHamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = headerActions.classList.toggle('active');
+      btnHamburger.classList.toggle('active', isOpen);
+      btnHamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!headerActions.contains(e.target) && !btnHamburger.contains(e.target)) {
+        headerActions.classList.remove('active');
+        btnHamburger.classList.remove('active');
+        btnHamburger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close menu when clicking actions inside
+    headerActions.querySelectorAll('.btn-nav, .btn-google, .btn-logout, .theme-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        headerActions.classList.remove('active');
+        btnHamburger.classList.remove('active');
+        btnHamburger.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
+  // -------------------------------------------------------------
   // Google Auth Button Handlers
   // -------------------------------------------------------------
   const btnGoogleLogin = document.getElementById('btn-google-login');
