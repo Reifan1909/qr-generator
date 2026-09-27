@@ -661,6 +661,71 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSimulateScanAction = document.getElementById('btn-simulate-scan-action');
   const btnResetScansConfirm = document.getElementById('btn-reset-scans-confirm');
 
+  // QR Preview Lightbox Modal Elements
+  const modalQrLightbox = document.getElementById('qr-preview-lightbox-modal');
+  const btnCloseQrLightbox = document.getElementById('btn-close-qr-lightbox');
+  const lightboxProjectTitle = document.getElementById('lightbox-project-title');
+  const lightboxProjectMeta = document.getElementById('lightbox-project-meta');
+  const lightboxQrImage = document.getElementById('lightbox-qr-image');
+  const btnLightboxDownload = document.getElementById('btn-lightbox-download');
+  const btnLightboxEdit = document.getElementById('btn-lightbox-edit');
+  let activeLightboxProject = null;
+
+  function openQrLightbox(proj) {
+    if (!proj || !modalQrLightbox) return;
+    activeLightboxProject = proj;
+    if (lightboxProjectTitle) lightboxProjectTitle.textContent = proj.title || 'QR Code';
+    const scans = proj.scanCount || 0;
+    const typeLabel = proj.type ? proj.type.toUpperCase() : 'URL';
+    const dynamicLabel = proj.isDynamic ? ' • DINAMIS' : '';
+    if (lightboxProjectMeta) {
+      lightboxProjectMeta.textContent = `${typeLabel}${dynamicLabel} • ${scans} scan`;
+    }
+    if (lightboxQrImage) {
+      lightboxQrImage.src = proj.thumbnail || '';
+      lightboxQrImage.alt = proj.title || 'QR Code';
+    }
+    modalQrLightbox.classList.add('active');
+  }
+
+  function downloadProjectQr(proj) {
+    if (!proj || !proj.thumbnail) {
+      window.showToast('Data gambar QR Code tidak ditemukan.', 'error');
+      return;
+    }
+    try {
+      const cleanTitle = (proj.title || 'qr-code').trim().replace(/[^a-zA-Z0-9_\-\u0600-\u06FF]/g, '_');
+      const link = document.createElement('a');
+      link.href = proj.thumbnail;
+      link.download = `${cleanTitle}_qrcode.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.showToast(`Mengunduh QR Code "${proj.title}"...`, 'success');
+    } catch (e) {
+      console.error('Download QR Code failed:', e);
+      window.showToast('Gagal mengunduh QR Code.', 'error');
+    }
+  }
+
+  btnCloseQrLightbox?.addEventListener('click', () => {
+    modalQrLightbox?.classList.remove('active');
+  });
+
+  btnLightboxDownload?.addEventListener('click', () => {
+    if (activeLightboxProject) {
+      downloadProjectQr(activeLightboxProject);
+    }
+  });
+
+  btnLightboxEdit?.addEventListener('click', () => {
+    if (activeLightboxProject) {
+      loadProjectIntoEditor(activeLightboxProject);
+      modalQrLightbox?.classList.remove('active');
+      modalProjects?.classList.remove('active');
+    }
+  });
+
   // Search & Filter
   const inputSearchProjects = document.getElementById('input-search-projects');
   const selectSortProjects = document.getElementById('select-sort-projects');
@@ -857,7 +922,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       card.innerHTML = `
         <div class="project-info-left">
-          <img src="${proj.thumbnail}" alt="${proj.title}" class="project-thumb" />
+          <img src="${proj.thumbnail}" alt="${proj.title}" class="project-thumb" title="Klik untuk melihat pratinjau QR Code" />
           <div class="project-details">
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
               <h4>${proj.title}</h4>
@@ -870,17 +935,52 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <div class="project-actions-right">
-          <button class="btn-action-sm btn-action-primary btn-analytics" title="Lihat Analitik Scan Lengkap">
-            📊 Analitik
+          <button type="button" class="btn-action-sm btn-icon-only btn-preview-qr" title="Tampilkan / Pratinjau QR Code">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
           </button>
-          <button class="btn-action-sm btn-edit" title="Buka dan Edit Desain">
-            ✏️ Edit Desain
+          <button type="button" class="btn-action-sm btn-icon-only btn-download-qr" title="Unduh QR Code (PNG)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
           </button>
-          <button class="btn-action-sm btn-delete-sm btn-delete" title="Hapus Proyek">
-            🗑️
+          <button type="button" class="btn-action-sm btn-icon-only btn-action-primary btn-analytics" title="Lihat Analitik Scan Lengkap">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </button>
+          <button type="button" class="btn-action-sm btn-icon-only btn-edit" title="Buka dan Edit Desain">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </button>
+          <button type="button" class="btn-action-sm btn-icon-only btn-delete-sm btn-delete" title="Hapus Proyek">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
           </button>
         </div>
       `;
+
+      card.querySelector('.project-thumb').addEventListener('click', () => {
+        openQrLightbox(proj);
+      });
+
+      card.querySelector('.btn-preview-qr').addEventListener('click', () => {
+        openQrLightbox(proj);
+      });
+
+      card.querySelector('.btn-download-qr').addEventListener('click', () => {
+        downloadProjectQr(proj);
+      });
 
       card.querySelector('.btn-analytics').addEventListener('click', () => {
         openAnalyticsDetailModal(proj.id);
@@ -1168,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Backdrop click dismissal
-  [modalProjects, modalScanner, modalFirebaseSetup, authPromptModal, modalAnalyticsDetail].forEach((modal) => {
+  [modalProjects, modalScanner, modalFirebaseSetup, authPromptModal, modalAnalyticsDetail, modalQrLightbox].forEach((modal) => {
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.classList.remove('active');

@@ -11,6 +11,7 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   color-scheme: var(--color-scheme);
+  overflow-x: clip;
 }
 
 body {
@@ -19,7 +20,7 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.25s ease, color 0.25s ease;
@@ -301,12 +302,24 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
   gap: 2rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .generator-left-panel,
 .generator-right-panel {
   min-width: 0; /* Prevents overflow in grid items */
+}
+
+.generator-right-panel {
+  height: 100%;
+  position: relative;
+}
+
+.preview-sticky-wrapper {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 1.5rem;
+  z-index: 20;
 }
 
 /* Section Headings */

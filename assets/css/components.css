@@ -989,6 +989,13 @@ textarea.form-control {
   padding: 3px;
   object-fit: contain;
   border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.project-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
 .project-details h4 {
@@ -1019,7 +1026,7 @@ textarea.form-control {
 .project-actions-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .btn-action-sm {
@@ -1037,20 +1044,132 @@ textarea.form-control {
   transition: all var(--transition-fast);
 }
 
-.btn-action-sm:hover {
+.btn-icon-only {
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  display: inline-flex !important;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-icon-only svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+.btn-preview-qr {
+  color: var(--primary);
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.btn-preview-qr:hover {
   background: var(--primary-light);
   border-color: var(--primary);
   color: var(--primary);
+  transform: translateY(-1px);
 }
 
-.btn-delete-sm {
+.btn-download-qr {
+  color: var(--accent-emerald);
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.btn-download-qr:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--accent-emerald);
+  color: var(--accent-emerald);
+  transform: translateY(-1px);
+}
+
+.project-actions-right .btn-analytics {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+}
+
+.project-actions-right .btn-analytics:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+.project-actions-right .btn-edit {
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+  background: var(--bg-card);
+}
+
+.project-actions-right .btn-edit:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.project-actions-right .btn-delete-sm {
   color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
 }
 
-.btn-delete-sm:hover {
-  background: rgba(239, 68, 68, 0.1);
+.project-actions-right .btn-delete-sm:hover {
+  background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+/* Lightbox QR Preview Modal */
+.qr-lightbox-card {
+  max-width: 380px !important;
+  width: 100%;
+  border-radius: var(--radius-xl);
+}
+
+.qr-lightbox-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.25rem;
+}
+
+.qr-lightbox-frame {
+  background: #ffffff;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 250px;
+  height: 250px;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.qr-lightbox-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.qr-lightbox-actions-group {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.qr-lightbox-actions-group .btn-nav {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
 }
 
 .empty-state {
@@ -1813,7 +1932,7 @@ textarea.form-control {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 0.4rem !important;
+    gap: 0.35rem !important;
     border-top: 1px solid var(--border-subtle) !important;
     padding-top: 0.6rem !important;
     box-sizing: border-box !important;
@@ -1821,16 +1940,22 @@ textarea.form-control {
 
   .project-actions-right .btn-action-sm {
     flex: 1 !important;
+    height: 38px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0 !important;
     justify-content: center !important;
-    padding: 0.48rem 0.4rem !important;
-    font-size: 0.75rem !important;
+    align-items: center !important;
+    font-size: 0.9rem !important;
     white-space: nowrap !important;
     text-align: center !important;
   }
 
   .project-actions-right .btn-delete-sm {
-    flex: 0 0 36px !important;
-    height: 33px !important;
+    flex: 1 !important;
+    height: 38px !important;
+    width: auto !important;
+    min-width: 0 !important;
     padding: 0 !important;
     justify-content: center !important;
     align-items: center !important;
@@ -1887,9 +2012,13 @@ textarea.form-control {
     max-width: 85px;
   }
 
+  .project-actions-right {
+    gap: 0.25rem !important;
+  }
+
   .project-actions-right .btn-action-sm {
-    font-size: 0.7rem;
-    padding: 0.42rem 0.25rem;
+    height: 36px !important;
+    padding: 0 !important;
   }
 }
 
