@@ -2102,6 +2102,46 @@ textarea.form-control {
   pointer-events: auto;
 }
 
+/* Simple Cancel Button in Top Right Corner */
+.btn-cancel-loading {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.btn-cancel-loading:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+.btn-cancel-loading:active {
+  transform: scale(0.94);
+}
+
+@media (max-width: 640px) {
+  .btn-cancel-loading {
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .global-loading-box {
   display: flex;
   flex-direction: column;

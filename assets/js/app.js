@@ -157,7 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Centered Loading Screen System
   let activeLoadingCount = 0;
+  let loadingCancelled = false;
+
   window.showGlobalLoading = function (text = 'Memuat...') {
+    loadingCancelled = false;
     activeLoadingCount++;
     const overlay = document.getElementById('global-loading-overlay');
     const textEl = document.getElementById('global-loading-text');
@@ -175,8 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  window.isGlobalLoadingCancelled = function () {
+    return loadingCancelled;
+  };
+
   window.hideGlobalLoading = function (force = false) {
     if (force) {
+      loadingCancelled = true;
       activeLoadingCount = 0;
     } else {
       activeLoadingCount = Math.max(0, activeLoadingCount - 1);
@@ -189,6 +197,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   };
+
+  // Close / Cancel Global Loading on 'X' button or Escape key
+  const btnCancelGlobalLoading = document.getElementById('btn-cancel-global-loading');
+  btnCancelGlobalLoading?.addEventListener('click', () => {
+    window.hideGlobalLoading(true);
+    window.showToast?.('Pemuatan dibatalkan.', 'info');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const overlay = document.getElementById('global-loading-overlay');
+      if (overlay?.classList.contains('active')) {
+        window.hideGlobalLoading(true);
+        window.showToast?.('Pemuatan dibatalkan.', 'info');
+      }
+    }
+  });
 
   // -------------------------------------------------------------
   // 1. Tab Navigation (QR Content Types)
@@ -1000,10 +1025,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.showGlobalLoading('Memuat riwayat proyek...');
     try {
       await renderProjectsList();
-      modalProjects?.classList.add('active');
+      if (!window.isGlobalLoadingCancelled()) {
+        modalProjects?.classList.add('active');
+      }
     } catch (err) {
-      console.error('Failed to load projects:', err);
-      window.showToast('Gagal memuat riwayat proyek.', 'error');
+      if (!window.isGlobalLoadingCancelled()) {
+        console.error('Failed to load projects:', err);
+        window.showToast('Gagal memuat riwayat proyek.', 'error');
+      }
     } finally {
       window.hideGlobalLoading();
     }
@@ -1265,7 +1294,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const project = await window.qrStorage.getProject(projectId);
       if (!project) {
-        window.showToast('Data proyek tidak ditemukan.', 'error');
+        if (!window.isGlobalLoadingCancelled()) {
+          window.showToast('Data proyek tidak ditemukan.', 'error');
+        }
         return;
       }
 
@@ -1279,11 +1310,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (detailTrackingUrl) detailTrackingUrl.textContent = trackingLink;
       if (btnOpenTrackingUrl) btnOpenTrackingUrl.href = trackingLink;
 
-      renderAnalyticsDetailValues(project);
-      modalAnalyticsDetail?.classList.add('active');
+      if (!window.isGlobalLoadingCancelled()) {
+        renderAnalyticsDetailValues(project);
+        modalAnalyticsDetail?.classList.add('active');
+      }
     } catch (err) {
-      console.error('Open analytics error:', err);
-      window.showToast('Gagal memuat analitik.', 'error');
+      if (!window.isGlobalLoadingCancelled()) {
+        console.error('Open analytics error:', err);
+        window.showToast('Gagal memuat analitik.', 'error');
+      }
     } finally {
       window.hideGlobalLoading();
     }
