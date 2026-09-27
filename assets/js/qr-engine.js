@@ -52,6 +52,8 @@ class QREngine {
 
   buildQRCodeOptions(customSize = null) {
     const size = customSize || this.state.width;
+    const baseSize = (this.state.width && this.state.width > 0) ? this.state.width : 300;
+    const scale = size / baseSize;
 
     let dotsOptions = {
       type: this.state.dotsType
@@ -88,13 +90,21 @@ class QREngine {
     const hasLogo = Boolean(this.state.logo && this.state.logo.trim());
     const isHttpLogo = hasLogo && (this.state.logo.startsWith('http://') || this.state.logo.startsWith('https://'));
 
+    const rawLogoMargin = typeof this.state.logoMargin !== 'undefined' ? parseInt(this.state.logoMargin, 10) : 8;
+    const validLogoMargin = isNaN(rawLogoMargin) ? 8 : rawLogoMargin;
+    const scaledLogoMargin = Math.round(validLogoMargin * scale);
+
+    const rawOuterMargin = typeof this.state.margin !== 'undefined' ? parseInt(this.state.margin, 10) : 10;
+    const validOuterMargin = isNaN(rawOuterMargin) ? 10 : rawOuterMargin;
+    const scaledOuterMargin = Math.round(validOuterMargin * scale);
+
     return {
       width: size,
       height: size,
       type: 'canvas',
       data: this.state.data || 'https://google.com',
       image: hasLogo ? this.state.logo : '',
-      margin: this.state.margin,
+      margin: scaledOuterMargin,
       dotsOptions: dotsOptions,
       cornersSquareOptions: cornersSquareOptions,
       cornersDotOptions: cornersDotOptions,
@@ -103,9 +113,9 @@ class QREngine {
       },
       imageOptions: {
         crossOrigin: isHttpLogo ? 'anonymous' : undefined,
-        margin: parseInt(this.state.logoMargin, 10) || 8,
+        margin: scaledLogoMargin,
         imageSize: parseFloat(this.state.logoSize) || 0.35,
-        hideBackgroundDots: this.state.hideDotsBehindLogo
+        hideBackgroundDots: this.state.hideDotsBehindLogo !== false
       },
       qrOptions: {
         // Automatically enforce high error correction if logo is present

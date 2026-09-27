@@ -1518,6 +1518,17 @@ document.addEventListener('DOMContentLoaded', () => {
       setActiveStyleBtn('dotsType', proj.qrConfig.dotsType);
       setActiveStyleBtn('cornersSquareType', proj.qrConfig.cornersSquareType);
       setActiveStyleBtn('cornersDotType', proj.qrConfig.cornersDotType);
+
+      if (sliderLogoSize && proj.qrConfig.logoSize !== undefined) {
+        sliderLogoSize.value = proj.qrConfig.logoSize;
+        const valEl = document.getElementById('logo-size-val');
+        if (valEl) valEl.textContent = Math.round(proj.qrConfig.logoSize * 100) + '%';
+      }
+      if (sliderLogoMargin && proj.qrConfig.logoMargin !== undefined) {
+        sliderLogoMargin.value = proj.qrConfig.logoMargin;
+        const valEl = document.getElementById('logo-margin-val');
+        if (valEl) valEl.textContent = proj.qrConfig.logoMargin + 'px';
+      }
     }
 
     window.showToast(`Proyek "${proj.title}" dimuat ke editor!`, 'success');
