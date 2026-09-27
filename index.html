@@ -6,12 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
     content="QR Code Generator modern, bersih, dan responsif dengan kustomisasi bentuk titik, sudut, logo tengah, sistem simpan proyek & dynamic QR untuk foto, video, link.">
-  <title>QR Generator | Generator QR Code Modern & Kustom Desain</title>
+  <title>QR Generator | By Reifan Mardatilla</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
 
   <!-- Google Fonts & Stylesheets -->
-  <link rel="stylesheet" href="assets/css/variables.css?v=3.3">
-  <link rel="stylesheet" href="assets/css/style.css?v=3.3">
-  <link rel="stylesheet" href="assets/css/components.css?v=3.3">
+  <link rel="stylesheet" href="assets/css/variables.css?v=3.4">
+  <link rel="stylesheet" href="assets/css/style.css?v=3.4">
+  <link rel="stylesheet" href="assets/css/components.css?v=3.4">
 
   <!-- QRCodeStyling Library & Html5Qrcode CDN -->
   <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -49,7 +52,8 @@
       </a>
 
       <!-- Hamburger Button (Mobile / Responsive) -->
-      <button type="button" class="btn-hamburger" id="btn-hamburger" aria-label="Buka Menu Navigasi" aria-expanded="false">
+      <button type="button" class="btn-hamburger" id="btn-hamburger" aria-label="Buka Menu Navigasi"
+        aria-expanded="false">
         <span class="hamburger-bar"></span>
         <span class="hamburger-bar"></span>
         <span class="hamburger-bar"></span>
@@ -1321,7 +1325,8 @@
         </div>
 
         <div class="qr-lightbox-actions-group">
-          <button type="button" class="btn-nav btn-nav-primary" id="btn-lightbox-download" style="flex: 1; justify-content: center;">
+          <button type="button" class="btn-nav btn-nav-primary" id="btn-lightbox-download"
+            style="flex: 1; justify-content: center;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
@@ -1361,13 +1366,15 @@
             Proyek: <strong id="download-modal-project-name" style="color: var(--primary);">QR Code</strong>
           </div>
         </div>
-        <button type="button" class="btn-close-modal" id="btn-close-download-resolution" aria-label="Tutup modal">✕</button>
+        <button type="button" class="btn-close-modal" id="btn-close-download-resolution"
+          aria-label="Tutup modal">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 1.25rem 1.4rem 1.5rem;">
         <!-- Pilihan Format -->
         <div style="margin-bottom: 1.15rem;">
-          <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.45rem; display: block;">
+          <label
+            style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.45rem; display: block;">
             Format Gambar
           </label>
           <div class="segmented-control" id="download-format-segmented">
@@ -1378,21 +1385,32 @@
         </div>
 
         <!-- Pilihan Resolusi & Ukuran -->
-        <div id="group-download-resolution" style="margin-bottom: 1.35rem;">
+        <div id="group-download-resolution" style="margin-bottom: 1rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
             <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin: 0;">
               Resolusi & Ukuran
             </label>
-            <span id="download-file-size-estimate" style="font-size: 0.75rem; color: var(--accent-emerald); font-weight: 600;">
+            <span id="download-file-size-estimate"
+              style="font-size: 0.75rem; color: var(--accent-emerald); font-weight: 600;">
               Ukuran: ~150 KB
             </span>
           </div>
-          <select id="select-download-res" class="form-control" style="font-size: 0.88rem; padding: 0.65rem 0.85rem; width: 100%;">
+          <select id="select-download-res" class="form-control"
+            style="font-size: 0.88rem; padding: 0.65rem 0.85rem; width: 100%;">
             <option value="512" data-size="~50 KB">512 × 512 px (Standar Web / Medsos)</option>
             <option value="1024" data-size="~150 KB" selected>1024 × 1024 px (HD - Standar Cetak)</option>
             <option value="2048" data-size="~450 KB">2048 × 2048 px (2K Ultra HD)</option>
             <option value="4096" data-size="~1.2 MB">4096 × 4096 px (4K Master Cetak)</option>
           </select>
+        </div>
+
+        <!-- Checkbox Background Transparan (Hanya untuk PNG) -->
+        <div style="margin-bottom: 1.25rem;">
+          <label class="custom-checkbox-row" id="label-download-transparent"
+            style="cursor: pointer; display: flex; align-items: center; gap: 0.55rem; font-size: 0.84rem; color: var(--text-primary); user-select: none; transition: opacity var(--transition-fast);">
+            <input type="checkbox" id="check-download-transparent" />
+            <span>Latar Belakang Transparan (Khusus PNG)</span>
+          </label>
         </div>
 
         <!-- Tombol Unduh Utama -->
@@ -1413,15 +1431,15 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <!-- Application Logic Scripts -->
-  <script src="assets/js/firebase-config.js?v=3.3"></script>
-  <script src="assets/js/auth.js?v=3.3"></script>
-  <script src="assets/js/storage.js?v=3.3"></script>
-  <script src="assets/js/icons-data.js?v=3.3"></script>
-  <script src="assets/js/templates.js?v=3.3"></script>
-  <script src="assets/js/qr-engine.js?v=3.3"></script>
-  <script src="assets/js/exporter.js?v=3.3"></script>
-  <script src="assets/js/scanner.js?v=3.3"></script>
-  <script src="assets/js/app.js?v=3.3"></script>
+  <script src="assets/js/firebase-config.js?v=3.4"></script>
+  <script src="assets/js/auth.js?v=3.4"></script>
+  <script src="assets/js/storage.js?v=3.4"></script>
+  <script src="assets/js/icons-data.js?v=3.4"></script>
+  <script src="assets/js/templates.js?v=3.4"></script>
+  <script src="assets/js/qr-engine.js?v=3.4"></script>
+  <script src="assets/js/exporter.js?v=3.4"></script>
+  <script src="assets/js/scanner.js?v=3.4"></script>
+  <script src="assets/js/app.js?v=3.4"></script>
 </body>
 
 </html>

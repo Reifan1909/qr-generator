@@ -1214,6 +1214,16 @@ textarea.form-control {
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
 }
 
+.segmented-control .seg-btn:disabled,
+.segmented-control .seg-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem 1.5rem;

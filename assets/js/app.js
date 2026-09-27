@@ -696,6 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const groupDownloadResolution = document.getElementById('group-download-resolution');
   const selectDownloadRes = document.getElementById('select-download-res');
   const downloadFileSizeEstimate = document.getElementById('download-file-size-estimate');
+  const checkDownloadTransparent = document.getElementById('check-download-transparent');
   const btnDoDownloadAction = document.getElementById('btn-do-download-action');
   const labelDoDownload = document.getElementById('label-do-download');
 
@@ -708,6 +709,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedOpt = selectDownloadRes.options[selectDownloadRes.selectedIndex];
     const sizeEst = selectedOpt?.getAttribute('data-size') || '';
 
+    // Checkbox transparan hanya bisa diklik saat format PNG; selain PNG dibuat disabled & agak transparan
+    const isPng = currentDownloadFormat === 'png';
+    const labelTrans = document.getElementById('label-download-transparent') || checkDownloadTransparent?.closest('label');
+    if (checkDownloadTransparent) {
+      checkDownloadTransparent.disabled = !isPng;
+    }
+    if (labelTrans) {
+      labelTrans.style.opacity = isPng ? '1' : '0.35';
+      labelTrans.style.pointerEvents = isPng ? 'auto' : 'none';
+      labelTrans.style.cursor = isPng ? 'pointer' : 'not-allowed';
+    }
+
     if (currentDownloadFormat === 'svg') {
       if (groupDownloadResolution) groupDownloadResolution.style.opacity = '0.4';
       if (selectDownloadRes) selectDownloadRes.disabled = true;
@@ -717,7 +730,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (groupDownloadResolution) groupDownloadResolution.style.opacity = '1';
       if (selectDownloadRes) selectDownloadRes.disabled = false;
       if (downloadFileSizeEstimate) downloadFileSizeEstimate.textContent = `Ukuran: ${sizeEst}`;
-      labelDoDownload.textContent = `Unduh ${currentDownloadFormat.toUpperCase()} (${resVal} px)`;
+      const transText = (isPng && checkDownloadTransparent?.checked) ? ' Transparan' : '';
+      labelDoDownload.textContent = `Unduh ${currentDownloadFormat.toUpperCase()}${transText} (${resVal} px)`;
     }
   }
 
@@ -728,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
       downloadModalProjectName.textContent = proj.title || 'QR Code';
     }
 
-    // Reset default ke PNG 1024px
+    // Reset default ke PNG 1024px & non-transparan
     currentDownloadFormat = 'png';
     downloadFormatSegmented?.querySelectorAll('.seg-btn').forEach((b) => {
       b.classList.toggle('active', b.getAttribute('data-format') === 'png');
@@ -737,12 +751,15 @@ document.addEventListener('DOMContentLoaded', () => {
       selectDownloadRes.value = '1024';
       selectDownloadRes.disabled = false;
     }
+    if (checkDownloadTransparent) {
+      checkDownloadTransparent.checked = false;
+    }
     updateDownloadModalUI();
 
     modalDownloadResolution.classList.add('active');
   }
 
-  // Event listener format selector (PNG, SVG, WebP)
+  // Event listener format selector (PNG, SVG, WebP semua bisa diklik)
   downloadFormatSegmented?.querySelectorAll('.seg-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -753,8 +770,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Event listener perubahan resolusi
+  // Event listener perubahan resolusi & checkbox transparan
   selectDownloadRes?.addEventListener('change', () => {
+    updateDownloadModalUI();
+  });
+
+  checkDownloadTransparent?.addEventListener('change', () => {
     updateDownloadModalUI();
   });
 
@@ -762,10 +783,11 @@ document.addEventListener('DOMContentLoaded', () => {
   btnDoDownloadAction?.addEventListener('click', async () => {
     if (!activeDownloadTargetProject) return;
     const res = parseInt(selectDownloadRes?.value, 10) || 1024;
-    await executeResolutionDownload(activeDownloadTargetProject, res, currentDownloadFormat);
+    const isTransparent = Boolean(currentDownloadFormat === 'png' && checkDownloadTransparent?.checked);
+    await executeResolutionDownload(activeDownloadTargetProject, res, currentDownloadFormat, isTransparent);
   });
 
-  async function executeResolutionDownload(targetProject, resolution = 1024, format = 'png') {
+  async function executeResolutionDownload(targetProject, resolution = 1024, format = 'png', isTransparent = false) {
     if (!targetProject) {
       window.showToast('Data proyek tidak ditemukan.', 'error');
       return;
@@ -803,6 +825,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetProject.qrConfig && typeof QRCodeStyling !== 'undefined') {
         const dummy = Object.create(QREngine.prototype);
         dummy.state = { ...targetProject.qrConfig };
+        if (isTransparent && format === 'png') {
+          dummy.state.bgColor = 'transparent';
+        }
         canvasToDownload = await dummy.getFramedCanvas(resolution);
       } else if (targetProject.thumbnail) {
         // Fallback upscale dari thumbnail
@@ -816,6 +841,20 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, resolution, resolution);
+            if (isTransparent && format === 'png') {
+              try {
+                const imgData = ctx.getImageData(0, 0, resolution, resolution);
+                const d = imgData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                  if (d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240) {
+                    d[i + 3] = 0;
+                  }
+                }
+                ctx.putImageData(imgData, 0, 0);
+              } catch (e) {
+                console.warn('Canvas pixel transparency fallback error:', e);
+              }
+            }
             resolve(cvs);
           };
           img.src = targetProject.thumbnail;
@@ -830,14 +869,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const ext = format === 'webp' ? 'webp' : 'png';
       const dataUrl = canvasToDownload.toDataURL(mimeType, 1.0);
 
+      const transSuffix = (isTransparent && format === 'png') ? '_transparent' : '';
       const link = document.createElement('a');
       link.href = dataUrl;
-      link.download = `${cleanTitle}_${resolution}px.${ext}`;
+      link.download = `${cleanTitle}_${resolution}px${transSuffix}.${ext}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      window.showToast(`Berhasil mengunduh QR Code ${resolution}px (${ext.toUpperCase()})!`, 'success');
+      const successLabel = isTransparent ? ' (PNG Transparan)' : ` (${ext.toUpperCase()})`;
+      window.showToast(`Berhasil mengunduh QR Code ${resolution}px${successLabel}!`, 'success');
       modalDownloadResolution?.classList.remove('active');
     } catch (err) {
       console.error('Error generating resolution download:', err);
