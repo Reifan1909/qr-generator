@@ -1172,6 +1172,48 @@ textarea.form-control {
   font-size: 0.85rem;
 }
 
+/* ========================================================
+   MODAL: UNDUH QR CODE (SIMPEL: FORMAT, RESOLUSI, UKURAN)
+   ======================================================== */
+.download-simple-card {
+  max-width: 380px !important;
+  width: 100%;
+  border-radius: var(--radius-xl);
+}
+
+.segmented-control {
+  display: flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 3px;
+}
+
+.segmented-control .seg-btn {
+  flex: 1;
+  padding: 0.5rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.segmented-control .seg-btn:hover {
+  color: var(--text-primary);
+}
+
+.segmented-control .seg-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem 1.5rem;
@@ -2006,6 +2048,7 @@ textarea.form-control {
     font-size: 0.75rem;
   }
 }
+
 
 @media (max-width: 380px) {
   .status-badge {

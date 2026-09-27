@@ -688,25 +688,178 @@ document.addEventListener('DOMContentLoaded', () => {
     modalQrLightbox.classList.add('active');
   }
 
-  function downloadProjectQr(proj) {
-    if (!proj || !proj.thumbnail) {
-      window.showToast('Data gambar QR Code tidak ditemukan.', 'error');
+  // Download Resolution Modal Elements & Actions (Simpel: Format, Resolusi/Ukuran, Tombol Unduh)
+  const modalDownloadResolution = document.getElementById('download-resolution-modal');
+  const btnCloseDownloadResolution = document.getElementById('btn-close-download-resolution');
+  const downloadModalProjectName = document.getElementById('download-modal-project-name');
+  const downloadFormatSegmented = document.getElementById('download-format-segmented');
+  const groupDownloadResolution = document.getElementById('group-download-resolution');
+  const selectDownloadRes = document.getElementById('select-download-res');
+  const downloadFileSizeEstimate = document.getElementById('download-file-size-estimate');
+  const btnDoDownloadAction = document.getElementById('btn-do-download-action');
+  const labelDoDownload = document.getElementById('label-do-download');
+
+  let activeDownloadTargetProject = null;
+  let currentDownloadFormat = 'png';
+
+  function updateDownloadModalUI() {
+    if (!labelDoDownload || !selectDownloadRes) return;
+    const resVal = selectDownloadRes.value;
+    const selectedOpt = selectDownloadRes.options[selectDownloadRes.selectedIndex];
+    const sizeEst = selectedOpt?.getAttribute('data-size') || '';
+
+    if (currentDownloadFormat === 'svg') {
+      if (groupDownloadResolution) groupDownloadResolution.style.opacity = '0.4';
+      if (selectDownloadRes) selectDownloadRes.disabled = true;
+      if (downloadFileSizeEstimate) downloadFileSizeEstimate.textContent = 'Vektor Tak Terbatas (~15 KB)';
+      labelDoDownload.textContent = 'Unduh Vektor SVG';
+    } else {
+      if (groupDownloadResolution) groupDownloadResolution.style.opacity = '1';
+      if (selectDownloadRes) selectDownloadRes.disabled = false;
+      if (downloadFileSizeEstimate) downloadFileSizeEstimate.textContent = `Ukuran: ${sizeEst}`;
+      labelDoDownload.textContent = `Unduh ${currentDownloadFormat.toUpperCase()} (${resVal} px)`;
+    }
+  }
+
+  function openDownloadResolutionModal(proj) {
+    if (!proj || !modalDownloadResolution) return;
+    activeDownloadTargetProject = proj;
+    if (downloadModalProjectName) {
+      downloadModalProjectName.textContent = proj.title || 'QR Code';
+    }
+
+    // Reset default ke PNG 1024px
+    currentDownloadFormat = 'png';
+    downloadFormatSegmented?.querySelectorAll('.seg-btn').forEach((b) => {
+      b.classList.toggle('active', b.getAttribute('data-format') === 'png');
+    });
+    if (selectDownloadRes) {
+      selectDownloadRes.value = '1024';
+      selectDownloadRes.disabled = false;
+    }
+    updateDownloadModalUI();
+
+    modalDownloadResolution.classList.add('active');
+  }
+
+  // Event listener format selector (PNG, SVG, WebP)
+  downloadFormatSegmented?.querySelectorAll('.seg-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadFormatSegmented.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDownloadFormat = btn.getAttribute('data-format') || 'png';
+      updateDownloadModalUI();
+    });
+  });
+
+  // Event listener perubahan resolusi
+  selectDownloadRes?.addEventListener('change', () => {
+    updateDownloadModalUI();
+  });
+
+  // Event listener tombol unduh utama
+  btnDoDownloadAction?.addEventListener('click', async () => {
+    if (!activeDownloadTargetProject) return;
+    const res = parseInt(selectDownloadRes?.value, 10) || 1024;
+    await executeResolutionDownload(activeDownloadTargetProject, res, currentDownloadFormat);
+  });
+
+  async function executeResolutionDownload(targetProject, resolution = 1024, format = 'png') {
+    if (!targetProject) {
+      window.showToast('Data proyek tidak ditemukan.', 'error');
       return;
     }
+
+    const cleanTitle = (targetProject.title || 'qr-code').trim().replace(/[^a-zA-Z0-9_\-\u0600-\u06FF]/g, '_');
+
+    window.showToast(`Menyiapkan ${format.toUpperCase()} (${resolution}px)...`, 'info');
+
     try {
-      const cleanTitle = (proj.title || 'qr-code').trim().replace(/[^a-zA-Z0-9_\-\u0600-\u06FF]/g, '_');
+      if (format === 'svg') {
+        if (targetProject.qrConfig && typeof QRCodeStyling !== 'undefined') {
+          const dummy = Object.create(QREngine.prototype);
+          dummy.state = { ...targetProject.qrConfig };
+          const svgOptions = dummy.buildQRCodeOptions(1000);
+          svgOptions.type = 'svg';
+          const svgQR = new QRCodeStyling(svgOptions);
+          const rawBlob = await svgQR.getRawData('svg');
+          const link = document.createElement('a');
+          link.download = `${cleanTitle}_vector.svg`;
+          link.href = URL.createObjectURL(rawBlob);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.showToast(`Berhasil mengunduh format Vektor SVG "${targetProject.title}"!`, 'success');
+          modalDownloadResolution?.classList.remove('active');
+          return;
+        } else {
+          window.showToast('Format SVG memerlukan konfigurasi QR asli.', 'warning');
+        }
+      }
+
+      let canvasToDownload = null;
+
+      if (targetProject.qrConfig && typeof QRCodeStyling !== 'undefined') {
+        const dummy = Object.create(QREngine.prototype);
+        dummy.state = { ...targetProject.qrConfig };
+        canvasToDownload = await dummy.getFramedCanvas(resolution);
+      } else if (targetProject.thumbnail) {
+        // Fallback upscale dari thumbnail
+        canvasToDownload = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const cvs = document.createElement('canvas');
+            cvs.width = resolution;
+            cvs.height = resolution;
+            const ctx = cvs.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, resolution, resolution);
+            resolve(cvs);
+          };
+          img.src = targetProject.thumbnail;
+        });
+      }
+
+      if (!canvasToDownload) {
+        throw new Error('Gagal menghasilkan kanvas QR');
+      }
+
+      const mimeType = format === 'webp' ? 'image/webp' : 'image/png';
+      const ext = format === 'webp' ? 'webp' : 'png';
+      const dataUrl = canvasToDownload.toDataURL(mimeType, 1.0);
+
       const link = document.createElement('a');
-      link.href = proj.thumbnail;
-      link.download = `${cleanTitle}_qrcode.png`;
+      link.href = dataUrl;
+      link.download = `${cleanTitle}_${resolution}px.${ext}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.showToast(`Mengunduh QR Code "${proj.title}"...`, 'success');
-    } catch (e) {
-      console.error('Download QR Code failed:', e);
-      window.showToast('Gagal mengunduh QR Code.', 'error');
+
+      window.showToast(`Berhasil mengunduh QR Code ${resolution}px (${ext.toUpperCase()})!`, 'success');
+      modalDownloadResolution?.classList.remove('active');
+    } catch (err) {
+      console.error('Error generating resolution download:', err);
+      // Fallback aman ke thumbnail
+      if (targetProject.thumbnail) {
+        const link = document.createElement('a');
+        link.href = targetProject.thumbnail;
+        link.download = `${cleanTitle}_qr.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.showToast(`Mengunduh versi standar...`, 'info');
+        modalDownloadResolution?.classList.remove('active');
+      } else {
+        window.showToast('Gagal mengunduh gambar QR Code.', 'error');
+      }
     }
   }
+
+  btnCloseDownloadResolution?.addEventListener('click', () => {
+    modalDownloadResolution?.classList.remove('active');
+  });
 
   btnCloseQrLightbox?.addEventListener('click', () => {
     modalQrLightbox?.classList.remove('active');
@@ -714,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnLightboxDownload?.addEventListener('click', () => {
     if (activeLightboxProject) {
-      downloadProjectQr(activeLightboxProject);
+      openDownloadResolutionModal(activeLightboxProject);
     }
   });
 
@@ -979,7 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       card.querySelector('.btn-download-qr').addEventListener('click', () => {
-        downloadProjectQr(proj);
+        openDownloadResolutionModal(proj);
       });
 
       card.querySelector('.btn-analytics').addEventListener('click', () => {
@@ -1268,7 +1421,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Backdrop click dismissal
-  [modalProjects, modalScanner, modalFirebaseSetup, authPromptModal, modalAnalyticsDetail, modalQrLightbox].forEach((modal) => {
+  [modalProjects, modalScanner, modalFirebaseSetup, authPromptModal, modalAnalyticsDetail, modalQrLightbox, modalDownloadResolution].forEach((modal) => {
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.classList.remove('active');
