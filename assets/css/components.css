@@ -910,6 +910,15 @@ textarea.form-control {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-subtle);
+  gap: 0.75rem;
+}
+
+.modal-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .modal-title {
@@ -1179,6 +1188,9 @@ textarea.form-control {
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-full);
   white-space: nowrap;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-guest {
@@ -1205,15 +1217,9 @@ textarea.form-control {
    ======================================================== */
 .analytics-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   margin-bottom: 1.25rem;
-}
-
-@media (max-width: 580px) {
-  .analytics-stats-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .stat-metric-card {
@@ -1654,4 +1660,225 @@ textarea.form-control {
   color: white !important;
   border: none !important;
 }
+
+/* ========================================================
+   MOBILE RESPONSIVE RULES FOR MODALS & PROJECT LIST
+   Eliminates horizontal overflow and scales down UI cleanly
+   ======================================================== */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.65rem 0.5rem;
+    align-items: center;
+  }
+
+  .modal-card {
+    max-height: 90vh;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .modal-header {
+    padding: 0.85rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .modal-header-info {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .modal-title {
+    font-size: 0.98rem;
+    gap: 0.45rem;
+  }
+
+  .modal-title svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .status-badge {
+    max-width: 110px;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.45rem;
+  }
+
+  .modal-body {
+    padding: 0.85rem;
+    overflow-x: hidden;
+  }
+
+  /* 2x2 Balanced KPI Grid */
+  .analytics-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .stat-metric-card {
+    padding: 0.6rem 0.5rem;
+    border-radius: var(--radius-md);
+  }
+
+  .stat-metric-val {
+    font-size: 1.15rem;
+  }
+
+  .stat-metric-label {
+    font-size: 0.68rem;
+  }
+
+  /* Filter bar: Stack search & sort */
+  .projects-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .search-input-wrapper {
+    width: 100%;
+  }
+
+  .search-input-wrapper input {
+    padding: 0.55rem 0.65rem 0.55rem 2rem;
+    font-size: 0.82rem;
+    height: 38px;
+  }
+
+  .sort-select {
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.82rem;
+    height: 38px;
+  }
+
+  /* Project Item Card: 2-Row Stacked Layout */
+  .project-item-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .project-info-left {
+    width: 100%;
+    gap: 0.65rem;
+  }
+
+  .project-thumb {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .project-details {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .project-details h4 {
+    font-size: 0.88rem;
+    word-break: break-word;
+  }
+
+  .project-scan-pill {
+    font-size: 0.68rem;
+    padding: 0.12rem 0.4rem;
+  }
+
+  .project-meta {
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .project-type-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .project-actions-right {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.6rem;
+  }
+
+  .project-actions-right .btn-action-sm {
+    flex: 1;
+    justify-content: center;
+    padding: 0.48rem 0.4rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .project-actions-right .btn-delete-sm {
+    flex: 0 0 36px;
+    height: 33px;
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Detailed Analytics modal adjustments */
+  .analytics-url-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .analytics-url-box > div:last-child {
+    display: flex;
+    width: 100%;
+    gap: 0.4rem;
+  }
+
+  .analytics-url-box > div:last-child .btn-action-sm {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .analytics-section-card {
+    padding: 0.85rem;
+  }
+
+  .analytics-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .analytics-section-header .btn-simulate-scan {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .scan-log-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .status-badge {
+    max-width: 85px;
+  }
+
+  .project-actions-right .btn-action-sm {
+    font-size: 0.7rem;
+    padding: 0.42rem 0.25rem;
+  }
+}
+
 
