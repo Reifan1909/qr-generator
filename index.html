@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="QR Code Generator modern, bersih, dan responsif dengan kustomisasi bentuk titik, sudut, logo tengah, sistem simpan proyek & dynamic QR untuk foto, video, link.">
+  <title>QR Generator | Generator QR Code Modern & Kustom Desain</title>
+
+  <!-- Google Fonts & Stylesheets -->
+  <link rel="stylesheet" href="assets/css/variables.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+
+  <!-- QRCodeStyling Library & Html5Qrcode CDN -->
+  <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <!-- Firebase SDK Compat (Auth & Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+
+  <!-- Subtle Minimal Ambient Glow -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-subtle-glow"></div>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header class="site-header">
+      <a href="index.html" class="brand-wrapper" id="brand-link">
+        <div class="brand-icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-title">QR Generator <span class="brand-badge">FREE</span></span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <!-- Theme Switcher (Light / Dark / System) -->
+        <div class="theme-switcher-wrapper" role="radiogroup" aria-label="Pilih Tema Tampilan">
+          <button type="button" class="theme-btn" id="theme-btn-light" title="Mode Terang (Light Mode)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
+          <button type="button" class="theme-btn" id="theme-btn-dark" title="Mode Gelap (Dark Mode)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+          <button type="button" class="theme-btn" id="theme-btn-system" title="Ikuti Pengaturan Sistem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Google Sign-in / User Profile -->
+        <button type="button" class="btn-google" id="btn-google-login"
+          title="Masuk dengan Google untuk sinkronisasi proyek ke Cloud">
+          <svg viewBox="0 0 24 24">
+            <path fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+            <path fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+          </svg>
+          <span>Masuk Akun</span>
+        </button>
+
+        <div class="user-profile-box" id="user-profile-box">
+          <img id="user-avatar-img" class="user-avatar-img" src="" alt="Avatar" />
+          <span id="user-name-text" class="user-name-text">User</span>
+          <button type="button" class="btn-logout" id="btn-logout" title="Keluar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+
+        <button type="button" class="btn-nav" id="btn-open-scanner" title="Pindai QR Code dari Kamera atau File">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2">
+            </path>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+          </svg>
+          <span>Pindai QR</span>
+        </button>
+
+        <button type="button" class="btn-nav btn-nav-primary" id="btn-open-projects"
+          title="Buka Riwayat Proyek Tersimpan">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Proyek Saya</span>
+          <span class="badge-count" id="badge-project-count">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Hero Intro -->
+    <section class="page-hero">
+      <h1>Generator QR Code <span class="gradient-text">Modern & Bebas Kustom</span></h1>
+      <p>Buat QR Code dengan bentuk titik, sudut elegan, logo di tengah, dan warna pilihan. Simpan dan perbarui desain
+        kapan saja tanpa mengubah kode fisik yang sudah dicetak.</p>
+    </section>
+
+    <!-- Main Content Grid -->
+    <main class="main-content-grid">
+
+      <!-- LEFT COLUMN: Content Inputs & Customization Accordions -->
+      <div class="generator-left-panel">
+        <div class="glass-panel">
+
+          <!-- Content Type Selector Tabs -->
+          <nav class="qr-type-nav" aria-label="Tipe Konten QR">
+            <button type="button" class="type-tab-btn active" data-type="url" id="tab-url">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span>Tautan / URL</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="photo" id="tab-photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <span>Foto / Galeri</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="video" id="tab-video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+              <span>Video / YouTube</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="whatsapp" id="tab-whatsapp">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                </path>
+              </svg>
+              <span>WhatsApp</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="wifi" id="tab-wifi">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                <line x1="12" y1="20" x2="12.01" y2="20"></line>
+              </svg>
+              <span>WiFi</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="vcard" id="tab-vcard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Kontak / vCard</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="text" id="tab-text">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="17" y1="10" x2="3" y2="10"></line>
+                <line x1="21" y1="6" x2="3" y2="6"></line>
+                <line x1="21" y1="14" x2="3" y2="14"></line>
+                <line x1="17" y1="18" x2="3" y2="18"></line>
+              </svg>
+              <span>Teks Bebas</span>
+            </button>
+            <button type="button" class="type-tab-btn" data-type="email" id="tab-email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>Email</span>
+            </button>
+          </nav>
+
+          <!-- Tab 1: URL / Link -->
+          <div class="type-form-panel" data-type="url" style="display: block;">
+            <div class="form-group">
+              <label class="form-label" for="input-url">
+                <span>Alamat Tautan / URL Web</span>
+                <span style="color: var(--text-muted); font-size: 0.78rem;">Mendukung HTTPS</span>
+              </label>
+              <input type="url" id="input-url" class="form-control" placeholder="https://website-anda.com"
+                value="https://google.com" />
+            </div>
+
+            <!-- Dynamic QR & Scan Analytics Feature Toggle -->
+            <div class="dynamic-feature-card">
+              <div class="dynamic-feature-header">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="check-dynamic-url" />
+                  <span class="toggle-slider"></span>
+                </label>
+                <div>
+                  <div class="dynamic-feature-title">
+                    <span>Aktifkan Dynamic QR & Analitik Scan</span>
+                    <span class="badge-feature-recom">Disarankan</span>
+                  </div>
+                  <div class="dynamic-feature-desc">
+                    Merekam total scan, waktu & jenis perangkat scanner. Anda bebas memperbarui URL tujuan kapan saja
+                    tanpa perlu mencetak ulang kode QR fisik!
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Foto / Galeri (Dynamic) -->
+          <div class="type-form-panel" data-type="photo" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="input-photo-title">Judul Foto / Label Halaman</label>
+              <input type="text" id="input-photo-title" class="form-control"
+                placeholder="Contoh: Menu Restoran / Brosur Promo" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Unggah Foto atau Masukkan URL Gambar</label>
+              <div class="media-upload-box" id="photo-drop-zone">
+                <div class="upload-icon-circle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
+                <div class="upload-title">Klik untuk Unggah Gambar</div>
+                <div class="upload-subtitle">Mendukung JPG, PNG, WebP (Maks. 5MB)</div>
+                <input type="file" id="input-photo-file" accept="image/*" style="display: none;" />
+              </div>
+
+              <div class="media-preview-container" id="photo-preview-container">
+                <button type="button" class="media-remove-btn" id="btn-remove-photo" title="Hapus foto">✕</button>
+                <img id="photo-preview-img" src="" alt="Preview Gambar" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-photo-url">Atau URL Gambar Publik (Opsional)</label>
+              <input type="url" id="input-photo-url" class="form-control" placeholder="https://domain.com/gambar.jpg" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-photo-desc">Deskripsi / Keterangan Singkat</label>
+              <textarea id="input-photo-desc" class="form-control"
+                placeholder="Tuliskan keterangan yang akan tampil saat orang memindai QR code ini..."></textarea>
+            </div>
+
+            <div class="info-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span><strong>Dynamic QR:</strong> Tautan landing page viewer bersifat permanen. Anda dapat memperbarui
+                foto kapan saja di proyek ini tanpa perlu mencetak ulang QR!</span>
+            </div>
+          </div>
+
+          <!-- Tab 3: Video / YouTube -->
+          <div class="type-form-panel" data-type="video" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="input-video-title">Judul Video</label>
+              <input type="text" id="input-video-title" class="form-control"
+                placeholder="Contoh: Video Trailer / Tutorial Produk" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-video-url">Tautan Video (YouTube, TikTok, atau File Video
+                MP4)</label>
+              <input type="url" id="input-video-url" class="form-control"
+                placeholder="https://www.youtube.com/watch?v=..." />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-video-desc">Deskripsi Singkat</label>
+              <textarea id="input-video-desc" class="form-control"
+                placeholder="Tuliskan keterangan seputar video..."></textarea>
+            </div>
+
+            <div class="info-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Penonton akan diarahkan ke pemutar video interaktif dengan tombol tonton cepat.</span>
+            </div>
+          </div>
+
+          <!-- Tab 4: WhatsApp -->
+          <div class="type-form-panel" data-type="whatsapp" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="input-wa-phone">Nomor WhatsApp (dengan kode negara)</label>
+              <input type="tel" id="input-wa-phone" class="form-control" placeholder="6281234567890" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-wa-msg">Pesan Otomatis Awal (Pre-filled Text)</label>
+              <textarea id="input-wa-msg" class="form-control"
+                placeholder="Halo, saya ingin menanyakan info layanan..."></textarea>
+            </div>
+          </div>
+
+          <!-- Tab 5: WiFi -->
+          <div class="type-form-panel" data-type="wifi" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="input-wifi-ssid">Nama Jaringan (SSID)</label>
+              <input type="text" id="input-wifi-ssid" class="form-control" placeholder="Nama WiFi Kantor / Rumah" />
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="input-wifi-pass">Kata Sandi WiFi</label>
+                <input type="password" id="input-wifi-pass" class="form-control" placeholder="Password WiFi" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="select-wifi-enc">Jenis Enkripsi</label>
+                <select id="select-wifi-enc" class="form-control">
+                  <option value="WPA">WPA / WPA2 (Standar)</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">Tanpa Kata Sandi (Terbuka)</option>
+                </select>
+              </div>
+            </div>
+            <label class="custom-checkbox-row">
+              <input type="checkbox" id="check-wifi-hidden" />
+              <span>Jaringan WiFi ini tersembunyi (Hidden SSID)</span>
+            </label>
+          </div>
+
+          <!-- Tab 6: vCard Kontak -->
+          <div class="type-form-panel" data-type="vcard" style="display: none;">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="input-vcard-first">Nama Depan</label>
+                <input type="text" id="input-vcard-first" class="form-control" placeholder="Budi" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="input-vcard-last">Nama Belakang</label>
+                <input type="text" id="input-vcard-last" class="form-control" placeholder="Santoso" />
+              </div>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="input-vcard-phone">Nomor Telepon</label>
+                <input type="tel" id="input-vcard-phone" class="form-control" placeholder="+628123456789" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="input-vcard-email">Alamat Email</label>
+                <input type="email" id="input-vcard-email" class="form-control" placeholder="budi@kantor.com" />
+              </div>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="input-vcard-org">Perusahaan / Organisasi</label>
+                <input type="text" id="input-vcard-org" class="form-control" placeholder="PT Maju Bersama" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="input-vcard-title">Jabatan / Profesi</label>
+                <input type="text" id="input-vcard-title" class="form-control" placeholder="Marketing Director" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-vcard-web">Situs Web</label>
+              <input type="url" id="input-vcard-web" class="form-control" placeholder="https://portofolio.com" />
+            </div>
+          </div>
+
+          <!-- Tab 7: Teks Bebas -->
+          <div class="type-form-panel" data-type="text" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="input-plain-text">Isi Teks</label>
+              <textarea id="input-plain-text" class="form-control" style="min-height: 120px;"
+                placeholder="Tuliskan teks, catatan, atau pesan apa pun di sini..."></textarea>
+            </div>
+          </div>
+
+          <!-- Tab 8: Email -->
+          <div class="type-form-panel" data-type="email" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="input-email-to">Email Penerima</label>
+              <input type="email" id="input-email-to" class="form-control" placeholder="kontak@perusahaan.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-email-sub">Subjek Email</label>
+              <input type="text" id="input-email-sub" class="form-control" placeholder="Pertanyaan Produk" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-email-body">Isi Email Default</label>
+              <textarea id="input-email-body" class="form-control"
+                placeholder="Halo, saya ingin menanyakan..."></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ACCORDION: KUSTOMISASI DESAIN QR CODE -->
+        <div class="customizer-accordion">
+
+          <!-- Accordion 1: Template Desain Siap Pakai -->
+          <div class="accordion-item open">
+            <button type="button" class="accordion-header">
+              <div class="header-left">
+                <div class="header-left-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+                    </path>
+                  </svg>
+                </div>
+                <span>Template Desain Bersih & Modern</span>
+              </div>
+              <svg class="accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Pilih gaya warna &
+                bentuk profesional siap pakai:</p>
+              <div class="templates-grid" id="templates-grid"></div>
+            </div>
+          </div>
+
+          <!-- Accordion 2: Bentuk Pola (Dots & Corners) -->
+          <div class="accordion-item">
+            <button type="button" class="accordion-header">
+              <div class="header-left">
+                <div class="header-left-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 12h8"></path>
+                  </svg>
+                </div>
+                <span>Bentuk Titik & Sudut QR (Dots & Corners)</span>
+              </div>
+              <svg class="accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <!-- Dots Shape -->
+              <div class="form-group">
+                <label class="form-label">Bentuk Pola Titik (Dots Pattern)</label>
+                <div class="style-options-grid">
+                  <button type="button" class="style-option-btn active" data-dot-style="rounded">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="4" y="4" width="16" height="16" rx="4"></rect>
+                    </svg>
+                    <span>Rounded</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-dot-style="dots">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="8"></circle>
+                    </svg>
+                    <span>Dots</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-dot-style="classy">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="12 2 22 12 12 22 2 12"></polygon>
+                    </svg>
+                    <span>Classy</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-dot-style="classy-rounded">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="4" y="4" width="16" height="16" rx="8"></rect>
+                    </svg>
+                    <span>Classy Round</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-dot-style="extra-rounded">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="3" y="3" width="18" height="18" rx="7"></rect>
+                    </svg>
+                    <span>Extra Round</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-dot-style="square">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="4" y="4" width="16" height="16"></rect>
+                    </svg>
+                    <span>Square</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Corner Square Shape -->
+              <div class="form-group" style="margin-top: 1.25rem;">
+                <label class="form-label">Bingkai Mata Sudut (Corner Square)</label>
+                <div class="style-options-grid">
+                  <button type="button" class="style-option-btn active" data-corner-square-style="extra-rounded">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <rect x="3" y="3" width="18" height="18" rx="6"></rect>
+                    </svg>
+                    <span>Bulat Halus</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-corner-square-style="dot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <circle cx="12" cy="12" r="9"></circle>
+                    </svg>
+                    <span>Lingkaran</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-corner-square-style="square">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <rect x="3" y="3" width="18" height="18"></rect>
+                    </svg>
+                    <span>Kotak</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Corner Dot Shape -->
+              <div class="form-group" style="margin-top: 1.25rem;">
+                <label class="form-label">Titik Tengah Sudut (Corner Dot)</label>
+                <div class="style-options-grid">
+                  <button type="button" class="style-option-btn active" data-corner-dot-style="dot">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="6"></circle>
+                    </svg>
+                    <span>Dot Bulat</span>
+                  </button>
+                  <button type="button" class="style-option-btn" data-corner-dot-style="square">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="6" width="12" height="12"></rect>
+                    </svg>
+                    <span>Dot Kotak</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 3: Warna & Gradien -->
+          <div class="accordion-item">
+            <button type="button" class="accordion-header">
+              <div class="header-left">
+                <div class="header-left-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a7 7 0 0 0 7 7c0 7-7 13-7 13s-7-6-7-13a7 7 0 0 1 7-7z"></path>
+                  </svg>
+                </div>
+                <span>Warna & Gradien (Color Palette)</span>
+              </div>
+              <svg class="accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group">
+                <label class="form-label" for="select-color-type">Tipe Pewarnaan</label>
+                <select id="select-color-type" class="form-control">
+                  <option value="solid" selected>Satu Warna Solid (Single Color)</option>
+                  <option value="gradient">Gradien Dua Warna (Linear Gradient)</option>
+                </select>
+              </div>
+
+              <!-- Color 1 -->
+              <div class="color-picker-row">
+                <div class="color-input-wrapper">
+                  <input type="color" id="picker-color1" value="#0f172a" />
+                </div>
+                <div class="color-info">
+                  <div class="color-title">Warna Utama (Color 1)</div>
+                  <div class="color-value" id="hex-color1">#0F172A</div>
+                </div>
+              </div>
+
+              <!-- Color 2 (Gradient) -->
+              <div class="color-picker-row" id="color2-picker-container" style="display: none;">
+                <div class="color-input-wrapper">
+                  <input type="color" id="picker-color2" value="#0f172a" />
+                </div>
+                <div class="color-info">
+                  <div class="color-title">Warna Kedua Gradien (Color 2)</div>
+                  <div class="color-value" id="hex-color2">#0F172A</div>
+                </div>
+              </div>
+
+              <!-- Gradient Angle Slider -->
+              <div class="range-slider-group" id="gradient-controls-row" style="display: none;">
+                <div class="range-slider-header">
+                  <span>Sudut Kemiringan Gradien</span>
+                  <span id="gradient-angle-val" style="font-weight: 700; color: var(--primary);">45°</span>
+                </div>
+                <input type="range" id="range-gradient-angle" class="range-slider" min="0" max="360" value="45" />
+              </div>
+
+              <!-- Background Color -->
+              <div class="color-picker-row" style="margin-top: 1rem;">
+                <div class="color-input-wrapper">
+                  <input type="color" id="picker-bg" value="#ffffff" />
+                </div>
+                <div class="color-info">
+                  <div class="color-title">Warna Latar Belakang (Background)</div>
+                  <div class="color-value" id="hex-bg">#FFFFFF</div>
+                </div>
+              </div>
+
+              <!-- Quick Swatches -->
+              <label class="form-label" style="margin-top: 1.25rem;">Palet Warna Favorit</label>
+              <div class="swatch-palette">
+                <div class="swatch-item" data-c1="#000000" data-c2="#000000" style="background: #000000;"
+                  title="Monochrome Hitam"></div>
+                <div class="swatch-item" data-c1="#0f172a" data-c2="#334155"
+                  style="background: linear-gradient(135deg, #0f172a, #334155);" title="Slate Dark"></div>
+                <div class="swatch-item" data-c1="#4338ca" data-c2="#6366f1"
+                  style="background: linear-gradient(135deg, #4338ca, #6366f1);" title="Indigo"></div>
+                <div class="swatch-item" data-c1="#065f46" data-c2="#059669"
+                  style="background: linear-gradient(135deg, #065f46, #059669);" title="Emerald"></div>
+                <div class="swatch-item" data-c1="#0c4a6e" data-c2="#0284c7"
+                  style="background: linear-gradient(135deg, #0c4a6e, #0284c7);" title="Navy"></div>
+                <div class="swatch-item" data-c1="#881337" data-c2="#be123c"
+                  style="background: linear-gradient(135deg, #881337, #be123c);" title="Wine Red"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 4: Logo di Tengah (Center Logo) -->
+          <div class="accordion-item">
+            <button type="button" class="accordion-header">
+              <div class="header-left">
+                <div class="header-left-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="9" cy="9" r="2"></circle>
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                  </svg>
+                </div>
+                <span>Logo di Tengah (Center Brand Logo)</span>
+              </div>
+              <svg class="accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Pilih logo preset
+                instan atau unggah ikon perusahaan Anda:</p>
+
+              <div class="logo-presets-grid">
+                <button type="button" class="logo-preset-btn active" data-preset="none" title="Tanpa Logo">
+                  <span style="font-size: 0.75rem; font-weight: 700;">NONE</span>
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="whatsapp" title="WhatsApp">
+                  <img src="assets/icons/whatsapp.svg" alt="WhatsApp" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="instagram" title="Instagram">
+                  <img src="assets/icons/instagram.svg" alt="Instagram" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="youtube" title="YouTube">
+                  <img src="assets/icons/youtube.svg" alt="YouTube" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="tiktok" title="TikTok">
+                  <img src="assets/icons/tiktok.svg" alt="TikTok" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="wifi" title="WiFi">
+                  <img src="assets/icons/wifi.svg" alt="WiFi" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="globe" title="Website">
+                  <img src="assets/icons/globe.svg" alt="Website" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="maps" title="Lokasi Maps">
+                  <img src="assets/icons/maps.svg" alt="Maps" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="phone" title="Telepon">
+                  <img src="assets/icons/phone.svg" alt="Telepon" />
+                </button>
+                <button type="button" class="logo-preset-btn" data-preset="mail" title="Email">
+                  <img src="assets/icons/mail.svg" alt="Email" />
+                </button>
+              </div>
+
+              <!-- Upload Custom Logo -->
+              <input type="file" id="input-logo-file" accept="image/*" style="display: none;" />
+              <button type="button" class="btn-upload-logo" id="btn-upload-logo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Unggah Logo Kustom Sendiri (PNG / SVG / JPG)</span>
+              </button>
+
+              <!-- Logo Size Slider -->
+              <div class="range-slider-group">
+                <div class="range-slider-header">
+                  <span>Ukuran Logo</span>
+                  <span id="logo-size-val" style="font-weight: 700; color: var(--primary);">35%</span>
+                </div>
+                <input type="range" id="range-logo-size" class="range-slider" min="0.15" max="0.45" step="0.05"
+                  value="0.35" />
+              </div>
+
+              <!-- Logo Margin Slider -->
+              <div class="range-slider-group">
+                <div class="range-slider-header">
+                  <span>Jarak Ruang Logo (Margin)</span>
+                  <span id="logo-margin-val" style="font-weight: 700; color: var(--primary);">8px</span>
+                </div>
+                <input type="range" id="range-logo-margin" class="range-slider" min="0" max="25" step="1" value="8" />
+              </div>
+
+              <label class="custom-checkbox-row">
+                <input type="checkbox" id="check-hide-dots" checked />
+                <span>Bersihkan titik QR di belakang logo agar logo terlihat jernih</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Accordion 5: Bingkai & Label (Frames & CTA) -->
+          <div class="accordion-item">
+            <button type="button" class="accordion-header">
+              <div class="header-left">
+                <div class="header-left-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                  </svg>
+                </div>
+                <span>Bingkai & Teks Ajakan (Frames & CTA)</span>
+              </div>
+              <svg class="accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group">
+                <label class="form-label" for="select-frame-style">Gaya Bingkai</label>
+                <select id="select-frame-style" class="form-control">
+                  <option value="none">Tanpa Bingkai</option>
+                  <option value="bottom">Banner di Bawah ("SCAN ME")</option>
+                  <option value="top">Banner di Atas</option>
+                  <option value="badge">Kartu Badge Elegan</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="input-frame-text">Teks Label Ajakan (Call to Action)</label>
+                <input type="text" id="input-frame-text" class="form-control" value="SCAN ME" maxlength="24"
+                  placeholder="SCAN ME / HUBUNGI KAMI" />
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="picker-frame-bg">Warna Bingkai</label>
+                  <input type="color" id="picker-frame-bg" value="#0f172a"
+                    style="width: 100%; height: 38px; border-radius: 8px; border: 1px solid var(--border-medium); cursor: pointer; background: none;" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="picker-frame-text">Warna Teks</label>
+                  <input type="color" id="picker-frame-text" value="#ffffff"
+                    style="width: 100%; height: 38px; border-radius: 8px; border: 1px solid var(--border-medium); cursor: pointer; background: none;" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accordion 6: Pengaturan Koreksi Kesalahan -->
+          <div class="accordion-item">
+            <button type="button" class="accordion-header">
+              <div class="header-left">
+                <div class="header-left-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <span>Koreksi Kesalahan & Ketahanan Scan (Error Correction)</span>
+              </div>
+              <svg class="accordion-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group">
+                <label class="form-label" for="select-ecl">Level Koreksi Kerusakan</label>
+                <select id="select-ecl" class="form-control">
+                  <option value="L">L - Rendah (~7% kerusakan dapat dipulihkan)</option>
+                  <option value="M">M - Sedang (~15% kerusakan dapat dipulihkan)</option>
+                  <option value="Q" selected>Q - Tinggi (~25% dapat dipulihkan - Direkomendasikan)</option>
+                  <option value="H">H - Maksimal (~30% - Terbaik jika memakai logo besar)</option>
+                </select>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">
+                  Level yang lebih tinggi memastikan QR code tetap terbaca oleh kamera ponsel meskipun tertutup logo di
+                  tengah atau sedikit kotor/tergores saat dicetak.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Sticky Live Preview & Action Buttons -->
+      <aside class="generator-right-panel">
+        <div class="preview-sticky-wrapper">
+          <div class="preview-card">
+
+            <div class="preview-badge-status">
+              <span class="pulse-dot"></span>
+              <span>Live Preview</span>
+            </div>
+
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; text-align: left;">
+              Proyek ID: <strong id="current-project-id-badge"
+                style="color: var(--primary); font-family: monospace;">#qr_baru</strong>
+            </div>
+
+            <!-- Frame Wrapper for live canvas & label -->
+            <div class="qr-frame-outer" id="qr-frame-wrapper">
+              <div class="qr-frame-banner-top" id="frame-banner-top">SCAN ME</div>
+              <div id="qr-canvas-container"></div>
+              <div class="qr-frame-banner-bottom" id="frame-banner-bottom">SCAN ME</div>
+            </div>
+
+            <!-- HERO ACTION: SAVE / UPDATE PROJECT -->
+            <button type="button" class="btn-save-project" id="btn-save-project"
+              title="Simpan QR ini ke browser Anda agar dapat diedit kapan saja">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Simpan Proyek / Perbarui QR</span>
+            </button>
+
+            <!-- Resolution Selector for Download -->
+            <div class="resolution-select-row">
+              <span>Resolusi Ekspor:</span>
+              <select id="select-resolution" class="resolution-select">
+                <option value="512">Standar (512 x 512 px)</option>
+                <option value="1024" selected>HD (1024 x 1024 px)</option>
+                <option value="2048">2K Ultra HD (2048 x 2048 px)</option>
+                <option value="4000">4K Super Res (4000 x 4000 px)</option>
+              </select>
+            </div>
+
+            <!-- Download Action Buttons -->
+            <div class="download-actions-grid">
+              <button type="button" class="btn-download-action" id="btn-download-png">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Unduh PNG</span>
+              </button>
+              <button type="button" class="btn-download-action" id="btn-download-svg"
+                title="Vector format - sangat cocok untuk percetakan tanpa buram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+                <span>Unduh SVG</span>
+              </button>
+              <button type="button" class="btn-download-action" id="btn-download-webp">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="m4.93 4.93 4.24 4.24"></path>
+                  <path d="m14.83 9.17 4.24-4.24"></path>
+                  <path d="m14.83 14.83 4.24 4.24"></path>
+                  <path d="m9.17 14.83-4.24 4.24"></path>
+                </svg>
+                <span>Unduh WebP</span>
+              </button>
+              <button type="button" class="btn-download-action" id="btn-copy-clipboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Salin Gambar</span>
+              </button>
+            </div>
+
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.75rem;">
+              ✓ Gratis &bull; Tanpa Batas Scan &bull; Kualitas Cetak Tinggi
+            </p>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div>
+        <span>&copy; 2026 <strong>QR Generator</strong>. Platform Generator QR Code Gratis.</span>
+      </div>
+      <div>
+        <span>Solusi QR Generato Gratis dan Bebas Custom.</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: DAFTAR PROYEK & ANALITIK SCAN                   -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="projects-modal" role="dialog" aria-modal="true" aria-labelledby="projects-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h3 class="modal-title" id="projects-modal-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            </svg>
+            <span>Proyek & Analitik Scan</span>
+          </h3>
+          <span class="status-badge status-guest" id="storage-status-badge">Mode Tamu</span>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-projects" aria-label="Tutup modal">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Scan Analytics Summary Cards -->
+        <div class="analytics-stats-grid" id="analytics-stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="stat-total-projects">0</div>
+            <div class="stat-metric-label">Total QR Dibuat</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="stat-total-scans" style="color: var(--accent-emerald);">0</div>
+            <div class="stat-metric-label">Total Pemindaian</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="stat-top-qr"
+              style="font-size: 0.95rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">-</div>
+            <div class="stat-metric-label">QR Terpopuler</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="stat-device-ratio" style="color: var(--primary);">0%</div>
+            <div class="stat-metric-label">Rasio Smartphone</div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="projects-filter-bar">
+          <div class="search-input-wrapper">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="input-search-projects" placeholder="Cari nama proyek QR..." />
+          </div>
+          <select id="select-sort-projects" class="sort-select">
+            <option value="scans-desc">Paling Banyak Scan 👁️</option>
+            <option value="date-desc" selected>Terbaru Diperbarui 🕒</option>
+            <option value="date-asc">Terlama 📅</option>
+            <option value="title-asc">Nama (A-Z) 🔤</option>
+          </select>
+        </div>
+
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.85rem;">
+          Klik <strong>"Edit Desain"</strong> untuk memperbarui tampilan atau tujuan link. Kode QR fisik yang sudah
+          dicetak tetap aktif & mengarah ke data yang sama!
+        </p>
+
+        <div class="projects-list" id="projects-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: LOGIN PROMPT UNTUK SIMPAN PROYEK                 -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="auth-prompt-modal" role="dialog" aria-modal="true" aria-labelledby="auth-prompt-title">
+    <div class="modal-card auth-prompt-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h3 class="modal-title" id="auth-prompt-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            </svg>
+            <span>Simpan Proyek & Buka Analitik</span>
+          </h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-auth-prompt" aria-label="Tutup modal">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center; padding-top: 1.5rem;">
+        <div class="auth-prompt-icon-wrapper">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          </svg>
+        </div>
+        <h4 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0.85rem 0 0.4rem;">
+          Login untuk Menyimpan Desain QR
+        </h4>
+        <p
+          style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; max-width: 420px; margin: 0 auto 1.5rem;">
+          Mode Tamu hanya untuk membuat dan mengunduh QR langsung tanpa menyimpan. Masuk dengan akun Google untuk
+          menyimpan proyek ke Cloud, mengubah isi link kapan saja tanpa cetak ulang, serta melacak <strong>Analitik
+            Scan</strong> secara real-time!
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 380px; margin: 0 auto;">
+          <button type="button" class="btn-google-modal" id="btn-prompt-login-google">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z">
+              </path>
+              <path fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z">
+              </path>
+              <path fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z">
+              </path>
+              <path fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z">
+              </path>
+            </svg>
+            <span>Masuk dengan Akun Google</span>
+          </button>
+
+          <button type="button" class="btn-demo-modal" id="btn-prompt-login-demo">
+            <span>🧪 Masuk Mode Demo (Uji Coba Langsung)</span>
+          </button>
+
+          <button type="button" class="btn-cancel-modal" id="btn-prompt-cancel">
+            Batal / Lanjut Tanpa Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: DETAIL ANALITIK SCAN PEMINDAIAN                  -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="analytics-detail-modal" role="dialog" aria-modal="true"
+    aria-labelledby="analytics-detail-title">
+    <div class="modal-card analytics-modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="analytics-detail-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10M12 20V4M6 20v-6"></path>
+            </svg>
+            <span id="detail-project-title">Analitik Pemindaian</span>
+          </h3>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;" id="detail-project-subtitle">
+            ID: <span id="detail-project-id" style="font-family: monospace;">-</span> • Tipe: <span
+              id="detail-project-type">-</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-analytics-detail"
+          aria-label="Tutup modal">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Live Tracking URL Bar -->
+        <div class="analytics-url-box">
+          <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0;">
+            <span
+              style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700;">Tautan
+              Pelacak QR:</span>
+            <span id="detail-tracking-url" class="analytics-url-text">https://...</span>
+          </div>
+          <div style="display: flex; gap: 0.4rem; flex-shrink: 0;">
+            <button type="button" class="btn-action-sm" id="btn-copy-tracking-url" title="Salin Link">📋 Salin</button>
+            <a id="btn-open-tracking-url" href="#" target="_blank" rel="noopener noreferrer"
+              class="btn-action-sm btn-action-primary" title="Buka Scan">🚀 Buka</a>
+          </div>
+        </div>
+
+        <!-- 4 KPI Metrics -->
+        <div class="analytics-stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 1.25rem;">
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="detail-stat-scans" style="color: var(--accent-emerald);">0</div>
+            <div class="stat-metric-label">Total Pemindaian</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="detail-stat-last-time"
+              style="font-size: 0.92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              -</div>
+            <div class="stat-metric-label">Terakhir Di-scan</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="detail-stat-mobile-pct" style="color: var(--primary);">0%</div>
+            <div class="stat-metric-label">Pengguna Smartphone</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-val" id="detail-stat-top-browser"
+              style="font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              -</div>
+            <div class="stat-metric-label">Browser Terbanyak</div>
+          </div>
+        </div>
+
+        <!-- Device Breakdown -->
+        <div class="analytics-section-card">
+          <div class="analytics-section-header">
+            <h4>Distribusi Perangkat Pengunjung</h4>
+            <span style="font-size: 0.78rem; color: var(--text-muted);">Berdasarkan data scanner</span>
+          </div>
+          <div class="device-breakdown-bars">
+            <div class="device-bar-row">
+              <div class="device-label-col">
+                <span>📱 Smartphone / Mobile</span>
+                <span id="label-mobile-count">0 scan (0%)</span>
+              </div>
+              <div class="device-bar-track">
+                <div class="device-bar-fill fill-mobile" id="bar-mobile" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="device-bar-row">
+              <div class="device-label-col">
+                <span>💻 Komputer / Desktop</span>
+                <span id="label-desktop-count">0 scan (0%)</span>
+              </div>
+              <div class="device-bar-track">
+                <div class="device-bar-fill fill-desktop" id="bar-desktop" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="device-bar-row">
+              <div class="device-label-col">
+                <span>📟 Tablet / iPad</span>
+                <span id="label-tablet-count">0 scan (0%)</span>
+              </div>
+              <div class="device-bar-track">
+                <div class="device-bar-fill fill-tablet" id="bar-tablet" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Scan History Log -->
+        <div class="analytics-section-card" style="margin-top: 1.25rem;">
+          <div class="analytics-section-header">
+            <h4>Riwayat 10 Pemindaian Terakhir</h4>
+            <button type="button" class="btn-action-sm btn-simulate-scan" id="btn-simulate-scan-action">
+              ⚡ Simulasikan Scan (+1)
+            </button>
+          </div>
+          <div class="scan-logs-container">
+            <div id="scan-logs-list"></div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+          <button type="button" class="btn-danger-outline" id="btn-reset-scans-confirm">
+            🔄 Reset Hitungan Scan
+          </button>
+          <button type="button" class="btn-nav" id="btn-close-analytics-bottom">
+            Tutup
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: QR CODE SCANNER (KAMERA & FILE)                  -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="scanner-modal" role="dialog" aria-modal="true" aria-labelledby="scanner-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="scanner-modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2">
+            </path>
+          </svg>
+          <span>Pindai QR Code</span>
+        </h3>
+        <button type="button" class="btn-close-modal" id="btn-close-scanner" aria-label="Tutup modal">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.25rem;">
+          <button type="button" class="btn-nav btn-nav-primary" id="btn-start-camera">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            <span>Aktifkan Kamera</span>
+          </button>
+
+          <input type="file" id="input-scan-file" accept="image/*" style="display: none;" />
+          <button type="button" class="btn-nav" id="btn-scan-file">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Unggah Gambar QR</span>
+          </button>
+        </div>
+
+        <div id="qr-reader-camera"
+          style="width: 100%; max-width: 400px; margin: 0 auto; border-radius: var(--radius-md); overflow: hidden; background: #000; min-height: 250px;">
+        </div>
+
+        <div id="scanner-result-box"
+          style="display: none; margin-top: 1.5rem; text-align: left; background: var(--bg-input); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-medium);">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent-emerald); margin-bottom: 0.35rem;">✓
+            Berhasil Terbaca:</div>
+          <p id="scanner-result-text"
+            style="word-break: break-all; font-family: monospace; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.75rem;">
+          </p>
+          <a id="btn-open-scanned-url" href="#" target="_blank" rel="noopener noreferrer" class="btn-action-sm"
+            style="display: none; background: var(--primary); border: none; color: white;">
+            Buka Tautan Eksternal ↗
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: PETUNJUK KONFIGURASI FIREBASE CLOUD             -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="firebase-setup-modal" role="dialog" aria-modal="true"
+    aria-labelledby="firebase-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="firebase-modal-title">
+          <span>Aktivasi Cloud Sync & Google Login</span>
+        </h3>
+        <button type="button" class="btn-close-modal" id="btn-close-firebase-modal" aria-label="Tutup modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--text-primary); margin-bottom: 0.75rem;">
+          Untuk menghubungkan web ini dengan Login Google dan Cloud Sync gratis:
+        </p>
+        <div class="setup-instruction-box">
+          <ol>
+            <li>Buka <strong><a href="https://console.firebase.google.com/" target="_blank"
+                  style="color: var(--primary);">Firebase Console</a></strong> (gratis dari Google) & buat proyek baru.
+            </li>
+            <li>Di menu kiri, aktifkan <strong>Authentication</strong> &rarr; pilih metode <strong>Google</strong>
+              &rarr; Enable.</li>
+            <li>Di menu kiri, aktifkan <strong>Firestore Database</strong> &rarr; Create database (Test Mode).</li>
+            <li>Buka <strong>Project Settings</strong> (ikon gerigi) &rarr; daftarkan Web App (&lt;/&gt;) &rarr; salin
+              kuncinya.</li>
+            <li>Tempelkan kunci tersebut ke file <code>assets/js/firebase-config.js</code> di proyek Anda.</li>
+          </ol>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted);">
+          *Saat ini aplikasi tetap berjalan lancar 100% menggunakan Mode Tamu (Penyimpanan Lokal IndexedDB).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- Application Logic Scripts -->
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/icons-data.js"></script>
+  <script src="assets/js/templates.js"></script>
+  <script src="assets/js/qr-engine.js"></script>
+  <script src="assets/js/exporter.js"></script>
+  <script src="assets/js/scanner.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+
+</html>
