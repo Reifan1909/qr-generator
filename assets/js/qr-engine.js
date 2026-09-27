@@ -251,7 +251,7 @@ class QREngine {
       ctx.textBaseline = 'middle';
       ctx.font = `bold ${Math.round(resolution * 0.065)}px 'Outfit', sans-serif`;
       ctx.fillStyle = this.state.frameStyle === 'badge' ? this.state.frameTextColor : this.state.color1;
-      ctx.fillText(this.state.frameText.toUpperCase(), textX, textY);
+      ctx.fillText(this.state.frameText, textX, textY);
     }
 
     return framedCanvas;

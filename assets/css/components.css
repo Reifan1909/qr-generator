@@ -689,7 +689,6 @@ textarea.form-control {
   font-weight: 800;
   font-size: 1.05rem;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
   color: #0f172a;
   padding: 0.45rem 1.25rem;
   border-radius: var(--radius-sm);
