@@ -67,6 +67,73 @@ class QRStorage {
   }
 
   /**
+   * Helper to normalize deviceStats across local, Firestore, and legacy structures.
+   * Auto-recovers missing device stats from scanLogs, scanCount, or legacy dotted fields.
+   */
+  normalizeDeviceStats(project) {
+    if (!project) return { mobile: 0, desktop: 0, tablet: 0 };
+
+    let stats = project.deviceStats && typeof project.deviceStats === 'object'
+      ? { ...project.deviceStats }
+      : { mobile: 0, desktop: 0, tablet: 0 };
+
+    stats.mobile = Number(stats.mobile) || 0;
+    stats.desktop = Number(stats.desktop) || 0;
+    stats.tablet = Number(stats.tablet) || 0;
+
+    // 1. Recover stats from legacy dotted fields if present (written by previous Firestore set bug)
+    if (project['deviceStats.mobile'] !== undefined) {
+      stats.mobile += Number(project['deviceStats.mobile']) || 0;
+      delete project['deviceStats.mobile'];
+    }
+    if (project['deviceStats.desktop'] !== undefined) {
+      stats.desktop += Number(project['deviceStats.desktop']) || 0;
+      delete project['deviceStats.desktop'];
+    }
+    if (project['deviceStats.tablet'] !== undefined) {
+      stats.tablet += Number(project['deviceStats.tablet']) || 0;
+      delete project['deviceStats.tablet'];
+    }
+
+    // 2. Cross-reference scanLogs if deviceStats is all zero or smaller than logged scans
+    if (Array.isArray(project.scanLogs) && project.scanLogs.length > 0) {
+      let logMob = 0;
+      let logDesk = 0;
+      let logTab = 0;
+
+      project.scanLogs.forEach((entry) => {
+        const dev = ((entry && entry.device) || '').toLowerCase();
+        if (dev.includes('desk') || dev.includes('pc') || dev.includes('lap') || dev.includes('mac') || dev.includes('win')) {
+          logDesk++;
+        } else if (dev.includes('tab') || dev.includes('pad')) {
+          logTab++;
+        } else {
+          logMob++;
+        }
+      });
+
+      const totalLogs = logMob + logDesk + logTab;
+      const totalRecorded = stats.mobile + stats.desktop + stats.tablet;
+
+      if (totalLogs > totalRecorded || totalRecorded === 0) {
+        stats.mobile = Math.max(stats.mobile, logMob);
+        stats.desktop = Math.max(stats.desktop, logDesk);
+        stats.tablet = Math.max(stats.tablet, logTab);
+      }
+    }
+
+    // 3. Reconcile with total scanCount: if scanCount > recorded device stats, attribute remainder to Mobile
+    const totalScans = Number(project.scanCount) || 0;
+    const currentSum = stats.mobile + stats.desktop + stats.tablet;
+    if (totalScans > currentSum) {
+      stats.mobile += (totalScans - currentSum);
+    }
+
+    project.deviceStats = stats;
+    return stats;
+  }
+
+  /**
    * Save or Update a QR project (Hybrid: Local DB + Cloud Firestore if logged in)
    */
   async saveProject(project) {
@@ -114,14 +181,18 @@ class QRStorage {
           const pubSnap = await publicRef.get();
           if (pubSnap.exists) {
             const pubData = pubSnap.data();
-            if (pubData.scanCount && pubData.scanCount > record.scanCount) {
-              record.scanCount = pubData.scanCount;
+            this.normalizeDeviceStats(pubData);
+            const pubScans = Number(pubData.scanCount) || 0;
+            if (pubScans >= record.scanCount) {
+              record.scanCount = pubScans;
               record.lastScannedAt = pubData.lastScannedAt || record.lastScannedAt;
-              if (pubData.deviceStats) record.deviceStats = pubData.deviceStats;
+              record.deviceStats = pubData.deviceStats;
               if (pubData.scanLogs && pubData.scanLogs.length) record.scanLogs = pubData.scanLogs;
             }
           }
         } catch (e) {}
+
+        this.normalizeDeviceStats(record);
 
         if (this.currentUser) {
           const userRef = this.firestore.collection('users').doc(this.currentUser.uid);
@@ -141,6 +212,8 @@ class QRStorage {
           deviceStats: record.deviceStats,
           updatedAt: record.updatedAt
         }, { merge: true });
+
+        await this.saveLocalOnly(record);
       } catch (err) {
         console.warn('Sync to Firestore warning:', err);
       }
@@ -187,10 +260,13 @@ class QRStorage {
               const pubDoc = await this.firestore.collection('public_projects').doc(cp.id).get();
               if (pubDoc.exists) {
                 const pubData = pubDoc.data();
-                if (pubData.scanCount !== undefined && pubData.scanCount > (cp.scanCount || 0)) {
-                  cp.scanCount = pubData.scanCount;
+                this.normalizeDeviceStats(pubData);
+                const pubScans = Number(pubData.scanCount) || 0;
+                const cpScans = Number(cp.scanCount) || 0;
+                if (pubScans >= cpScans) {
+                  cp.scanCount = pubScans;
                   cp.lastScannedAt = pubData.lastScannedAt || cp.lastScannedAt;
-                  if (pubData.deviceStats) cp.deviceStats = pubData.deviceStats;
+                  cp.deviceStats = pubData.deviceStats;
                   if (pubData.scanLogs && pubData.scanLogs.length) {
                     cp.scanLogs = pubData.scanLogs;
                   }
@@ -206,6 +282,7 @@ class QRStorage {
             } catch (err) {
               console.warn('Sync public project err:', err);
             }
+            this.normalizeDeviceStats(cp);
             await this.saveLocalOnly(cp);
           }));
 
@@ -223,10 +300,13 @@ class QRStorage {
           const pubDoc = await this.firestore.collection('public_projects').doc(lp.id).get();
           if (pubDoc.exists) {
             const pubData = pubDoc.data();
-            if (pubData.scanCount !== undefined && pubData.scanCount > (lp.scanCount || 0)) {
-              lp.scanCount = pubData.scanCount;
+            this.normalizeDeviceStats(pubData);
+            const pubScans = Number(pubData.scanCount) || 0;
+            const lpScans = Number(lp.scanCount) || 0;
+            if (pubScans >= lpScans) {
+              lp.scanCount = pubScans;
               lp.lastScannedAt = pubData.lastScannedAt || lp.lastScannedAt;
-              if (pubData.deviceStats) lp.deviceStats = pubData.deviceStats;
+              lp.deviceStats = pubData.deviceStats;
               if (pubData.scanLogs && pubData.scanLogs.length) {
                 lp.scanLogs = pubData.scanLogs;
               }
@@ -234,7 +314,10 @@ class QRStorage {
             }
           }
         } catch (e) {}
+        this.normalizeDeviceStats(lp);
       }));
+    } else {
+      localProjects.forEach(lp => this.normalizeDeviceStats(lp));
     }
 
     localProjects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
@@ -271,16 +354,22 @@ class QRStorage {
         const publicDoc = await this.firestore.collection('public_projects').doc(id).get();
         if (publicDoc.exists) {
           const pubData = publicDoc.data();
+          this.normalizeDeviceStats(pubData);
           if (project) {
-            project.scanCount = pubData.scanCount !== undefined ? pubData.scanCount : project.scanCount;
-            project.lastScannedAt = pubData.lastScannedAt || project.lastScannedAt;
-            project.deviceStats = pubData.deviceStats || project.deviceStats;
-            if (pubData.scanLogs && pubData.scanLogs.length) project.scanLogs = pubData.scanLogs;
+            const pubScans = Number(pubData.scanCount) || 0;
+            const projScans = Number(project.scanCount) || 0;
+            if (pubScans >= projScans) {
+              project.scanCount = pubScans;
+              project.lastScannedAt = pubData.lastScannedAt || project.lastScannedAt;
+              project.deviceStats = pubData.deviceStats;
+              if (pubData.scanLogs && pubData.scanLogs.length) project.scanLogs = pubData.scanLogs;
+            }
           } else {
             project = pubData;
           }
         }
         if (project) {
+          this.normalizeDeviceStats(project);
           await this.saveLocalOnly(project);
           return project;
         }
@@ -293,7 +382,11 @@ class QRStorage {
       const transaction = this.db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const request = store.get(id);
-      request.onsuccess = () => resolve(request.result || null);
+      request.onsuccess = () => {
+        const res = request.result || null;
+        if (res) this.normalizeDeviceStats(res);
+        resolve(res);
+      };
       request.onerror = (e) => reject(e.target.error);
     });
   }
@@ -362,7 +455,7 @@ class QRStorage {
         project.scanCount = (project.scanCount || 0) + 1;
         project.lastScannedAt = now;
         
-        project.deviceStats = project.deviceStats || { mobile: 0, desktop: 0, tablet: 0 };
+        this.normalizeDeviceStats(project);
         project.deviceStats[devKey] = (project.deviceStats[devKey] || 0) + 1;
 
         project.scanLogs = Array.isArray(project.scanLogs) ? project.scanLogs : [];
@@ -382,7 +475,9 @@ class QRStorage {
           const updatePayload = {
             scanCount: firebase.firestore.FieldValue.increment(1),
             lastScannedAt: now,
-            [`deviceStats.${devKey}`]: firebase.firestore.FieldValue.increment(1),
+            deviceStats: {
+              [devKey]: firebase.firestore.FieldValue.increment(1)
+            },
             scanLogs: firebase.firestore.FieldValue.arrayUnion(logEntry)
           };
           await publicDocRef.set(updatePayload, { merge: true });
@@ -447,6 +542,9 @@ class QRStorage {
           scanCount: 0,
           lastScannedAt: null,
           deviceStats: { mobile: 0, desktop: 0, tablet: 0 },
+          'deviceStats.mobile': firebase.firestore.FieldValue.delete(),
+          'deviceStats.desktop': firebase.firestore.FieldValue.delete(),
+          'deviceStats.tablet': firebase.firestore.FieldValue.delete(),
           scanLogs: []
         };
         await this.firestore.collection('public_projects').doc(id).set(resetPayload, { merge: true });
@@ -471,6 +569,7 @@ class QRStorage {
     let aggregateDevices = { mobile: 0, desktop: 0, tablet: 0 };
 
     list.forEach((p) => {
+      this.normalizeDeviceStats(p);
       const count = Number(p.scanCount) || 0;
       totalScans += count;
       if (!topProject || count > (topProject.scanCount || 0)) {

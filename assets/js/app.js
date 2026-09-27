@@ -1325,6 +1325,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderAnalyticsDetailValues(project) {
+    if (window.qrStorage && typeof window.qrStorage.normalizeDeviceStats === 'function') {
+      window.qrStorage.normalizeDeviceStats(project);
+    }
+
     const scans = Number(project.scanCount) || 0;
     const stats = project.deviceStats || { mobile: 0, desktop: 0, tablet: 0 };
     const totalRecorded = (stats.mobile || 0) + (stats.desktop || 0) + (stats.tablet || 0);
