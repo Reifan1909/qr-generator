@@ -12,9 +12,9 @@
   <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
 
   <!-- Google Fonts & Stylesheets -->
-  <link rel="stylesheet" href="assets/css/variables.css?v=3.4">
-  <link rel="stylesheet" href="assets/css/style.css?v=3.4">
-  <link rel="stylesheet" href="assets/css/components.css?v=3.4">
+  <link rel="stylesheet" href="assets/css/variables.css?v=3.5">
+  <link rel="stylesheet" href="assets/css/style.css?v=3.5">
+  <link rel="stylesheet" href="assets/css/components.css?v=3.5">
 
   <!-- QRCodeStyling Library & Html5Qrcode CDN -->
   <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
@@ -1427,19 +1427,39 @@
     </div>
   </div>
 
+  <!-- GLOBAL SCREEN LOADING OVERLAY (CENTERED LOGO + BOUNCING DOTS) -->
+  <div class="global-loading-overlay" id="global-loading-overlay" aria-hidden="true" role="status">
+    <div class="global-loading-box">
+      <div class="global-loading-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+        </svg>
+      </div>
+      <div class="global-loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <p class="global-loading-text" id="global-loading-text">Memuat data...</p>
+    </div>
+  </div>
+
   <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <!-- Application Logic Scripts -->
-  <script src="assets/js/firebase-config.js?v=3.4"></script>
-  <script src="assets/js/auth.js?v=3.4"></script>
-  <script src="assets/js/storage.js?v=3.4"></script>
-  <script src="assets/js/icons-data.js?v=3.4"></script>
-  <script src="assets/js/templates.js?v=3.4"></script>
-  <script src="assets/js/qr-engine.js?v=3.4"></script>
-  <script src="assets/js/exporter.js?v=3.4"></script>
-  <script src="assets/js/scanner.js?v=3.4"></script>
-  <script src="assets/js/app.js?v=3.4"></script>
+  <script src="assets/js/firebase-config.js?v=3.5"></script>
+  <script src="assets/js/auth.js?v=3.5"></script>
+  <script src="assets/js/storage.js?v=3.5"></script>
+  <script src="assets/js/icons-data.js?v=3.5"></script>
+  <script src="assets/js/templates.js?v=3.5"></script>
+  <script src="assets/js/qr-engine.js?v=3.5"></script>
+  <script src="assets/js/exporter.js?v=3.5"></script>
+  <script src="assets/js/scanner.js?v=3.5"></script>
+  <script src="assets/js/app.js?v=3.5"></script>
 </body>
 
 </html>

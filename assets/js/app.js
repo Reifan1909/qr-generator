@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnSyncLocalCloud?.addEventListener('click', async () => {
+    window.showGlobalLoading('Menyinkronkan proyek ke Cloud Google...');
     try {
       btnSyncLocalCloud.textContent = 'Menyinkronkan...';
       const count = await window.qrStorage.syncLocalProjectsToCloud();
@@ -118,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       window.showToast(err.message, 'error');
     } finally {
+      window.hideGlobalLoading();
       btnSyncLocalCloud.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
         <span>Sinkronkan Proyek Lokal ke Akun Google Anda</span>
@@ -151,6 +153,41 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.style.transition = 'all 0.25s ease';
       setTimeout(() => toast.remove(), 260);
     }, 3200);
+  };
+
+  // Global Centered Loading Screen System
+  let activeLoadingCount = 0;
+  window.showGlobalLoading = function (text = 'Memuat...') {
+    activeLoadingCount++;
+    const overlay = document.getElementById('global-loading-overlay');
+    const textEl = document.getElementById('global-loading-text');
+    if (textEl) {
+      if (text) {
+        textEl.textContent = text;
+        textEl.style.display = 'block';
+      } else {
+        textEl.style.display = 'none';
+      }
+    }
+    if (overlay) {
+      overlay.classList.add('active');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+  };
+
+  window.hideGlobalLoading = function (force = false) {
+    if (force) {
+      activeLoadingCount = 0;
+    } else {
+      activeLoadingCount = Math.max(0, activeLoadingCount - 1);
+    }
+    if (activeLoadingCount === 0) {
+      const overlay = document.getElementById('global-loading-overlay');
+      if (overlay) {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+    }
   };
 
   // -------------------------------------------------------------
@@ -960,8 +997,16 @@ document.addEventListener('DOMContentLoaded', () => {
       authPromptModal?.classList.add('active');
       return;
     }
-    await renderProjectsList();
-    modalProjects?.classList.add('active');
+    window.showGlobalLoading('Memuat riwayat proyek...');
+    try {
+      await renderProjectsList();
+      modalProjects?.classList.add('active');
+    } catch (err) {
+      console.error('Failed to load projects:', err);
+      window.showToast('Gagal memuat riwayat proyek.', 'error');
+    } finally {
+      window.hideGlobalLoading();
+    }
   });
 
   // Auth Prompt Actions
@@ -997,6 +1042,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentProjectTitle = titlePrompt.trim();
     }
 
+    window.showGlobalLoading('Menyimpan proyek ke Cloud...');
     try {
       const canvas = await qrEngine.getFramedCanvas(300);
       const thumbnailData = canvas.toDataURL('image/png', 0.85);
@@ -1042,6 +1088,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Save project error:', err);
       window.showToast('Gagal menyimpan proyek QR.', 'error');
+    } finally {
+      window.hideGlobalLoading();
     }
   }
 
@@ -1187,11 +1235,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       card.querySelector('.btn-delete').addEventListener('click', async () => {
         if (confirm(`Yakin ingin menghapus proyek "${proj.title}"?`)) {
-          await window.qrStorage.deleteProject(proj.id);
-          card.remove();
-          await updateProjectsBadge();
-          await renderProjectsList();
-          window.showToast('Proyek berhasil dihapus.', 'info');
+          window.showGlobalLoading('Menghapus proyek...');
+          try {
+            await window.qrStorage.deleteProject(proj.id);
+            card.remove();
+            await updateProjectsBadge();
+            await renderProjectsList();
+            window.showToast('Proyek berhasil dihapus.', 'info');
+          } catch (err) {
+            console.error('Delete project error:', err);
+            window.showToast('Gagal menghapus proyek.', 'error');
+          } finally {
+            window.hideGlobalLoading();
+          }
         }
       });
 
@@ -1205,24 +1261,32 @@ document.addEventListener('DOMContentLoaded', () => {
   // DETAILED SCAN ANALYTICS MODAL CONTROLLER
   async function openAnalyticsDetailModal(projectId) {
     activeAnalyticsProjectId = projectId;
-    const project = await window.qrStorage.getProject(projectId);
-    if (!project) {
-      window.showToast('Data proyek tidak ditemukan.', 'error');
-      return;
+    window.showGlobalLoading('Memuat detail analitik...');
+    try {
+      const project = await window.qrStorage.getProject(projectId);
+      if (!project) {
+        window.showToast('Data proyek tidak ditemukan.', 'error');
+        return;
+      }
+
+      const origin = window.location.origin;
+      const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+      const trackingLink = `${origin}${basePath}viewer/index.html?id=${project.id}${project.type === 'url' ? '&redirect=1' : ''}`;
+
+      if (detailProjectTitle) detailProjectTitle.textContent = `Analitik: ${project.title}`;
+      if (detailProjectId) detailProjectId.textContent = project.id;
+      if (detailProjectType) detailProjectType.textContent = project.type.toUpperCase() + (project.isDynamic ? ' (DINAMIS)' : '');
+      if (detailTrackingUrl) detailTrackingUrl.textContent = trackingLink;
+      if (btnOpenTrackingUrl) btnOpenTrackingUrl.href = trackingLink;
+
+      renderAnalyticsDetailValues(project);
+      modalAnalyticsDetail?.classList.add('active');
+    } catch (err) {
+      console.error('Open analytics error:', err);
+      window.showToast('Gagal memuat analitik.', 'error');
+    } finally {
+      window.hideGlobalLoading();
     }
-
-    const origin = window.location.origin;
-    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-    const trackingLink = `${origin}${basePath}viewer/index.html?id=${project.id}${project.type === 'url' ? '&redirect=1' : ''}`;
-
-    if (detailProjectTitle) detailProjectTitle.textContent = `Analitik: ${project.title}`;
-    if (detailProjectId) detailProjectId.textContent = project.id;
-    if (detailProjectType) detailProjectType.textContent = project.type.toUpperCase() + (project.isDynamic ? ' (DINAMIS)' : '');
-    if (detailTrackingUrl) detailTrackingUrl.textContent = trackingLink;
-    if (btnOpenTrackingUrl) btnOpenTrackingUrl.href = trackingLink;
-
-    renderAnalyticsDetailValues(project);
-    modalAnalyticsDetail?.classList.add('active');
   }
 
   function renderAnalyticsDetailValues(project) {
