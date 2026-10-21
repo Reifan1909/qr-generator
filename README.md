@@ -1,4 +1,4 @@
-# QR Code Generator
+# Free QR Code Generator
 
 Aplikasi generator QR Code modern, dinamis, dan gratis yang dilengkapi dengan kustomisasi visual tingkat tinggi (bentuk titik, sudut, logo di tengah, gradien warna, bingkai/frame CTA), **Fitur Analitik Scan Real-Time**, serta sistem **Hybrid Auth (Mode Tamu & Akun Google)**.
 
